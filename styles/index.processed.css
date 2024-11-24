@@ -248,6 +248,7 @@ body {
     align-items: center;
     padding-bottom: 1rem;
     display: none; /* Hidden by default */
+    z-index: 30;
   }
 
   .nav-links.active {
