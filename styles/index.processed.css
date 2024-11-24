@@ -217,7 +217,7 @@ body {
 }
 
 /* Show hamburger on small screens */
-@media (max-width: 1024px) {
+@media (max-width: 764px) {
   .hamburger {
     display: block;
     color: #006088; /* Default text color */
@@ -293,16 +293,6 @@ body {
 .color7 {
   /* Kontakt */
   /* You can add specific styles if needed */
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .nav-links {
-    display: none; /* Hide links on small screens */
-  }
-
-  /* Optional: Add a hamburger menu for mobile */
-  /* You can implement a mobile menu toggle here */
 }
 
 h2 {
