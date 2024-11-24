@@ -388,7 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-function isMobileDevice() {
+/* function isMobileDevice() {
   return /Mobi|Android|iPhone|iPad|iPod|Windows Phone|BlackBerry|IEMobile|Opera Mini/i.test(
     navigator.userAgent
   );
@@ -407,4 +407,4 @@ if (isMobileDevice()) {
   hamburger.addEventListener("click", () => {
     navLinks.classList.toggle("active"); // Leverages .nav-links.active in your CSS
   });
-}
+} */
