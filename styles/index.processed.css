@@ -1,0 +1,421 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  /* position: relative; Establishes a new containing block */
+  display: flex; /* Enables Flexbox on the parent */
+  justify-content: center; /* Horizontally centers the content */
+  margin: 0;
+  height: 100%;
+  font-family: "Montserrat", sans-serif;
+  /* scroll-behavior: smooth; */
+  /*  background-color: #1d1e22; */
+  /* color: #f4f4f4; */
+}
+.image-container {
+  position: relative; /* Establishes a local positioning context */
+  width: 80vw; /* 80% of the viewport width */
+  height: 80vh; /* 80% of the viewport height */
+  max-width: 800px; /* Optional: Limit maximum width for larger screens */
+  max-height: 600px; /* Optional: Limit maximum height for larger screens */
+  border: 3px solid #006088; /* Semi-transparent blue border */
+  border-radius: 15px; /* Rounded corners */
+  overflow: hidden; /* Ensures content stays within the rounded container */
+  box-sizing: border-box; /* Includes border in width/height calculations */
+}
+
+.image-container img {
+  z-index: -1;
+  width: 100%; /* Makes the image responsive */
+  height: 100%;
+  object-fit: cover;
+  display: block; /* Removes any unwanted spacing */
+}
+
+.overlay {
+  position: absolute; /* Positions the overlay relative to `.image-container` */
+  top: 50vh;
+  left: 20vw; /* Offset from the left by 20% of the viewport width */
+  right: -5vw;
+  width: auto; /* Responsive width relative to the parent container */
+  height: auto;
+  border-radius: 15px;
+  border: 3px solid #006088;
+  background-color: #ffffffec; /* Semi-transparent black */
+  display: flex; /* Centers the content */
+  flex-direction: column; /* Stacks the text vertically */
+  align-items: center; /* Horizontally centers the content */
+  justify-content: center; /* Vertically centers the content */
+  padding: 20px; /* Adds some padding */
+  transition: opacity 0.5s ease; /* Smooth fade-in transition */
+}
+
+/* Fixed Background Styling */
+.background {
+  position: fixed; /* Fix the background relative to the viewport */
+  top: 0; /* Align to the top */
+  left: 0; /* Align to the left */
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  background-color: #fab900; /*Initial background color matching the first section */
+  transition: background-color 1s ease-out; /* Smooth transition for background color */
+  /*z-index: -2;  Place behind all other content */
+}
+
+.snap {
+  position: relative; /* Positions the sections on top of each other */
+  top: 0;
+  left: 0;
+  width: 100%;
+  /*height: 100vh;  Remove to allow dynamic heights based on content */
+
+  /* Optional: Add padding or other styling as needed */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  /* Ensure sections are initially hidden except for the first one */
+  opacity: 1;
+  transition: all 0.6s ease-out; /* Smooth fade-in and move-up effect */
+
+  /* !!! --- Added initial opacity for animation start --- !!! */
+  /* Set initial opacity to 0 for all except the first section */
+  /* This assumes the first .snap element should be visible initially */
+}
+
+.snap:not(:first-child) {
+  opacity: 0;
+}
+
+/* Lottie Animation Wrapper */
+/* .lottie-wrapp {
+  
+} */ /* Ensure it stays above other content if necessary */
+/* position: fixed; */ /* Fixed to viewport */
+/* display: flex; */
+/* align-items: center; */ /* Center vertically */
+/* justify-content: center; */ /* Center horizontally */
+/* min-height: 100vh; */
+/* width: 100%; */
+/* overflow: hidden; */
+/* } */
+
+/* Lottie Animation Overlay Styling */
+.lottie-overlay {
+  position: fixed; /* Fixed to viewport */
+  top: 50%; /* Center vertically */
+  left: 50%; /* Center horizontally */
+  transform: translate(-50%, -50%); /* Ensure perfect centering */
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0; /* Lower than pinned sections */
+  pointer-events: none; /* Allow interactions through */
+}
+
+/* Navbar Styling */
+.navbar {
+  transition: top 0.3s ease-in-out;
+  height: 60px;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  display: flex; /* Ensure Flexbox is used for alignment */
+  align-items: center; /* Vertically center the content */
+  /*background-color: #f8f9fa;  Similar to bg-base-100 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  padding: 0.5rem 1rem;
+  z-index: 1000;
+}
+
+/* Hidden Navbar */
+.navbar--hidden {
+  top: -100px; /* Adjust based on navbar height */
+}
+
+.navbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1300px; /* Adjust as needed */
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Logo Styling */
+.logo-link {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 140px; /* Adjust size as needed */
+  width: auto;
+}
+
+/* Navigation Links Styling */
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 0.25rem; /* Space between links */
+  margin: 0;
+  padding: 0;
+}
+
+.nav-item {
+  position: relative;
+  padding: 0.5rem 1rem;
+  color: #006088; /* Default text color */
+  font-weight: 500;
+  border: 3px solid transparent; /* Border set to transparent */
+  border-radius: 9999px;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+  text-decoration: none;
+}
+
+.nav-item:hover,
+.nav-item:focus {
+  background-color: #006088; /* Light gray background on hover */
+  color: #ffffff; /* Darker text color on hover */
+  border: 3px solid #a8cade; /* Corrected border property */
+  border-radius: 9999px;
+}
+
+/* Optional: Active Link Styling */
+.nav-item.active {
+  background-color: #006088; /* Slightly darker gray */
+  color: #ffffff;
+  border: 3px solid #a8cade; /* Corrected border property */
+  border-radius: 9999px;
+}
+
+/* Hamburger Menu Styling */
+.hamburger {
+  display: none; /* Hidden by default */
+  font-size: 1.5rem;
+  background: none;
+  border: 3px solid transparent; /* Initially invisible border */
+  border-radius: 9999px;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s, padding 0.3s; /* Include padding in transition */
+  cursor: pointer;
+  text-decoration: none;
+}
+
+/* Hamburger Hover and Focus States */
+.hamburger:hover,
+.hamburger:focus {
+  background-color: #006088; /* Light gray background on hover */
+  color: #ffffff; /* Darker text color on hover */
+  border: 3px solid #a8cade; /* Corrected border property */
+  border-radius: 9999px;
+}
+
+/* Show hamburger on small screens */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+    color: #006088; /* Default text color */
+    border: 3px solid transparent; /* Border set to transparent */
+    border-radius: 9999px;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+
+    text-decoration: none;
+  }
+  .navbar {
+    background-color: #fab900;
+  }
+  .hamburger:hover,
+  .hamburger:focus {
+    background-color: #006088; /* Light gray background on hover */
+    color: #ffffff; /* Darker text color on hover */
+    border: 3px solid #a8cade; /* Corrected border property */
+    border-radius: 9999px;
+  }
+
+  .nav-links {
+    position: absolute;
+    top: 60px; /* Adjust based on navbar height */
+    left: 0;
+    right: 0;
+    background-color: #fab900;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 1rem;
+    display: none; /* Hidden by default */
+  }
+
+  .nav-links.active {
+    display: flex;
+  }
+
+  .nav-item {
+    padding: 0.25rem;
+  }
+}
+
+/* Color Classes for Specific Links */
+.color1 {
+  /* Änderungen */
+  /* You can add specific styles if needed */
+}
+
+.color2 {
+  /* Maßanfertigung */
+  /* You can add specific styles if needed */
+}
+
+.color3 {
+  /* Heimtextilien */
+  /* You can add specific styles if needed */
+}
+
+.color4 {
+  /* Leder */
+  /* You can add specific styles if needed */
+}
+
+.color5 {
+  /* Polsterarbeiten */
+  /* You can add specific styles if needed */
+}
+
+.color6 {
+  /* Kunststopfen */
+  /* You can add specific styles if needed */
+}
+
+.color7 {
+  /* Kontakt */
+  /* You can add specific styles if needed */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none; /* Hide links on small screens */
+  }
+
+  /* Optional: Add a hamburger menu for mobile */
+  /* You can implement a mobile menu toggle here */
+}
+
+h2 {
+  font-size: 2rem;
+  color: #006088;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+#home {
+  z-index: 1; /* Base layer */
+  opacity: 1; /* Ensure it's visible initially */
+  transition: none; /* Avoid transition for the initial load */
+
+  height: 100vh; /* Full viewport height */
+
+  /* background-color: #fab900; */
+}
+
+#a1 {
+  z-index: 2;
+}
+
+#anderungen {
+  z-index: 3;
+
+  height: 100vh;
+  /* background-color: #fff; */
+}
+
+#a2 {
+  z-index: 4;
+}
+
+#massanfertigung {
+  z-index: 5;
+
+  height: 100vh;
+  /* background-color: #a8cade; */
+}
+
+#a3 {
+  z-index: 6;
+}
+
+#heimtextilien {
+  z-index: 7;
+
+  height: 100vh;
+  /* background-color: #fab900; */
+}
+
+#a4 {
+  z-index: 8;
+}
+
+#leder {
+  z-index: 9;
+
+  height: 100vh;
+  /* background-color: #cce7ff; */
+}
+
+#a5 {
+  z-index: 10;
+}
+
+#polsterarbeiten {
+  z-index: 11;
+
+  height: 100vh;
+  /*  background-color: #f0f8ff; */
+}
+
+#a6 {
+  z-index: 12;
+}
+
+#kunststopfen {
+  z-index: 13;
+
+  height: 100vh;
+  /* background-color: #f5f5dc; */
+}
+
+#a7 {
+  z-index: 14;
+}
+
+#kontakt {
+  z-index: 13;
+
+  height: 100vh;
+  /* background-color: #ffe4e1; */
+}
+
+#triggerEnd {
+  position: fixed; /* Already set */
+  bottom: 0; /* Anchors to the bottom */
+  left: 0; /* Aligns to the left */
+  right: 0; /* Aligns to the right */
+  /* Additional properties like width, height, and z-index as needed */
+}
+
+p {
+  font-size: 1rem;
+  line-height: 1;
+  color: #006088;
+}
+
+/* Added scrolling properties to .smooth 
+.smooth {
+  overflow-y: scroll;
+  height: 100vh;
+}
+*/

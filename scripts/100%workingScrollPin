@@ -1,0 +1,72 @@
+// Initialize ScrollMagic Controller
+const controller = new ScrollMagic.Controller();
+
+// Select all sections with the class "trigger"
+const sections = document.querySelectorAll(".trigger");
+
+// Array to store ScrollMagic scenes
+const scenes = [];
+
+// Function to calculate offset and duration based on viewport height
+function calculateValues() {
+  return {
+    offsetInPixels: window.innerHeight * 0.5, // 50% of the viewport height
+    durationInPixels: window.innerHeight * 0.4, // 40% of viewport height
+  };
+}
+
+// Function to create ScrollMagic scenes
+function createScenes() {
+  // Get initial values
+  const { offsetInPixels, durationInPixels } = calculateValues();
+
+  // Loop through each section
+  sections.forEach((section, index) => {
+    // Skip the last section if needed
+    if (index === sections.length - 1) return;
+
+    console.log(`Creating pinning scene for section index: ${index}`);
+
+    // Create a new ScrollMagic Scene
+    const scene = new ScrollMagic.Scene({
+      triggerElement: section,
+      triggerHook: 0.5,
+      duration: durationInPixels,
+      offset: offsetInPixels,
+    })
+      .setPin(section)
+      .addIndicators({ name: `Pin Section ${index}` }) // Remove this in production
+      .addTo(controller);
+
+    // Add the scene to the scenes array
+    scenes.push(scene);
+  });
+}
+
+// Function to update scenes on window resize
+function updateScenes() {
+  // Recalculate offset and duration
+  const { offsetInPixels, durationInPixels } = calculateValues();
+
+  // Update each scene
+  scenes.forEach((scene) => {
+    scene.offset(offsetInPixels);
+    scene.duration(durationInPixels);
+    scene.refresh();
+  });
+}
+
+// Debounce function to optimize resize events
+function debounce(func, wait) {
+  let timeout;
+  return function () {
+    clearTimeout(timeout);
+    timeout = setTimeout(func, wait);
+  };
+}
+
+// Initialize scenes
+createScenes();
+
+// Add event listener for window resize with debounced handler
+window.addEventListener("resize", debounce(updateScenes, 100));

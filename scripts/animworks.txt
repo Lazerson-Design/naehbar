@@ -1,0 +1,192 @@
+// Initialize Lottie Animation
+const elem = document.getElementById("a1");
+
+const anim = lottie.loadAnimation({
+  container: elem,
+  renderer: "svg",
+  loop: false,
+  autoplay: false,
+  path: "../anim1.json",
+});
+
+// Wait for the animation data to be ready
+anim.addEventListener("DOMLoaded", function () {
+  // Ensure totalFrames is available
+  const checkFramesLoaded = setInterval(function () {
+    if (anim.totalFrames > 0) {
+      clearInterval(checkFramesLoaded);
+      createScenes(); // Call createScenes after anim.totalFrames is available
+    }
+  }, 100);
+});
+
+// Initialize ScrollMagic Controller
+const controller = new ScrollMagic.Controller();
+
+// Select all sections with the class "trigger"
+const sections = document.querySelectorAll(".trigger");
+
+// Array to store ScrollMagic scenes
+const scenes = [];
+
+// Function to calculate offset and duration based on viewport height
+function calculateValues() {
+  return {
+    offsetInPixels: window.innerHeight * 0.5, // 50% of the viewport height
+    durationInPixels: window.innerHeight * 0.4, // 40% of viewport height
+  };
+}
+
+// Function to create ScrollMagic scenes
+function createScenes() {
+  // Get initial values
+  const { offsetInPixels, durationInPixels } = calculateValues();
+
+  // Loop through each section
+  sections.forEach((section, index) => {
+    // Skip the last section if needed
+    if (index === sections.length - 1) return;
+
+    console.log(`Creating pinning scene for section index: ${index}`);
+
+    // Create a new ScrollMagic Scene
+    const scene = new ScrollMagic.Scene({
+      triggerElement: section,
+      triggerHook: 0.5,
+      duration: durationInPixels,
+      offset: offsetInPixels,
+    })
+      .setPin(section)
+      .addIndicators({ name: `Pin Section ${index}` }) // Remove this in production
+      .addTo(controller);
+
+    // If this is section 0 (index 0), add code to control Lottie animation
+    if (index === 0) {
+      // Add event listener to control Lottie animation based on scroll progress
+      scene.on("progress", function (event) {
+        const progress = event.progress; // Ranges from 0 to 1
+        const frame = Math.round(progress * anim.totalFrames);
+        anim.goToAndStop(frame, true); // Update the animation frame
+      });
+
+      // Ensure the last frame remains visible after the animation completes
+      scene.on("end", function (event) {
+        if (event.scrollDirection === "FORWARD") {
+          anim.goToAndStop(anim.totalFrames, true);
+        }
+      });
+    }
+
+    // Add the scene to the scenes array
+    scenes.push(scene);
+  });
+}
+
+// Function to update scenes on window resize
+function updateScenes() {
+  // Recalculate offset and duration
+  const { offsetInPixels, durationInPixels } = calculateValues();
+
+  // Update each scene
+  scenes.forEach((scene) => {
+    scene.offset(offsetInPixels);
+    scene.duration(durationInPixels);
+    scene.refresh();
+  });
+}
+
+// Debounce function to optimize resize events
+function debounce(func, wait) {
+  let timeout;
+  return function () {
+    clearTimeout(timeout);
+    timeout = setTimeout(func, wait);
+  };
+}
+
+// Add event listener for window resize with debounced handler
+window.addEventListener("resize", debounce(updateScenes, 100));
+
+
+
+
+
+// Function to create Lottie animation scenes
+function createLottieAnimationScenes() {
+  // Remove existing animation scenes
+  lottieAnimationScenes.forEach((scene) => {
+    scene.destroy(true); // Remove the scene from controller and nullify vars
+  });
+  lottieAnimationScenes.length = 0; // Clear the array
+
+  // Ensure that we have calculated the scene positions
+  if (scenePositions.length === 0) {
+    console.error(
+      "Scene positions are not calculated. Call logScenePositions() first."
+    );
+    return;
+  }
+
+  // Loop through the animations
+  animations.forEach((anim, index) => {
+    // For each animation, we need to get the start and end positions
+    const prevScene = scenePositions[index]; // Scene corresponding to previous section
+    const nextScene = scenePositions[index + 1]; // Scene corresponding to next section
+
+    if (!prevScene || !nextScene) {
+      console.warn(
+        Cannot create animation scene for animation ${index} due to missing scene positions.
+      );
+      return;
+    }
+
+    const start = prevScene.end; // endPinSection of previous scene
+    const end = nextScene.start; // startPinSection of next scene
+    const duration = end - start;
+
+    console.log(
+      Creating Lottie animation scene for animation ${index} from ${start} to ${end}
+    );
+
+    // Create a ScrollMagic scene
+    const animationScene = new ScrollMagic.Scene({
+      triggerElement: null, // No trigger element, use global scroll position
+      triggerHook: 0.5, // Start at scroll position equals offset
+      duration: duration,
+      offset: start, // Start position of the animation
+    })
+      .on("progress", function (event) {
+        const progress = event.progress;
+        anim.goToAndStop(progress * anim.totalFrames, true);
+      })
+      .addIndicators({ name: Animation ${index} }) // For debugging; remove in production
+      .addTo(controller);
+
+    // Store the animation scene
+    lottieAnimationScenes.push(animationScene);
+  });
+}
+
+so i have this animation triggers, and it works PERFECTLY. please do not touch it, but i want to use same triggers to manipulate the opacity of this:
+
+.snap {
+  position: relative; /* Positions the sections on top of each other */
+  top: 0;
+  left: 0;
+  width: 100%;
+  /*height: 100vh;  Remove to allow dynamic heights based on content */
+
+  /* Optional: Add padding or other styling as needed */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  /* Ensure sections are initially hidden except for the first one */
+  opacity: 1;
+  transition: all 0.6s ease-out; /* Smooth fade-in and move-up effect */
+}
+
+can you integrate this? so on start animation 0 section 1 is opacity 0 and on end animation 0 opacity is 1? 
+
+when you adjust the code, NO explanations please. leave the existing code, add the fade in code, AND please make it VERY visible what you added maybe with // !!! --- ... --- !!! so i can clerly see what you added and why

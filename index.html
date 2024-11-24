@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Meta -->
+    <meta charset="UTF-8" />
+    <title>Bodymovin Demo with Sections</title>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles/index.processed.css" />
+    <!--<link rel="stylesheet" href="styles/snap.css" />-->
+    <!--<link rel="stylesheet" href="styles/fade-in.css" />-->
+
+    <!-- Lottie Animation Library -->
+    <script src="scripts/lottie.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- GSAP TweenMax -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- Note: TweenMax is part of GSAP 3, so including gsap.min.js suffices -->
+
+    <!-- ScrollMagic Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/ScrollMagic.min.js"></script>
+    <!-- ScrollMagic GSAP Plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/animation.gsap.min.js"></script>
+    <!-- ScrollMagic Indicators (Optional for Debugging) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ScrollMagic/2.0.8/plugins/debug.addIndicators.min.js"></script>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <div class="navbar-container">
+        <!-- Logo Section -->
+        <a href="#home" class="logo-link">
+          <img src="../nähbarlogo.svg" alt="Logo" class="logo" />
+        </a>
+
+        <!-- Hamburger Menu Icon -->
+        <button class="hamburger" aria-label="Toggle navigation">
+          &#9776;
+        </button>
+
+        <!-- Navigation Links -->
+        <ul class="nav-links">
+          <li><a href="#anderungen" class="nav-item color1">Änderungen</a></li>
+          <li>
+            <a href="#massanfertigung" class="nav-item color2"
+              >Maßanfertigung</a
+            >
+          </li>
+          <li>
+            <a href="#heimtextilien" class="nav-item color3">Heimtextilien</a>
+          </li>
+          <li><a href="#leder" class="nav-item color4">Leder</a></li>
+          <li>
+            <a href="#polsterarbeiten" class="nav-item color5"
+              >Polsterarbeiten</a
+            >
+          </li>
+          <li>
+            <a href="#kunststopfen" class="nav-item color6">Kunststopfen</a>
+          </li>
+          <li><a href="#kontakt" class="nav-item color7">Kontakt</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Fixed Background Layer -->
+    <div class="background"></div>
+
+    <div class="lottie-wrapper">
+      <!-- Lottie Animation Container -->
+      <div id="bm" class="lottie-overlay"></div>
+    </div>
+    <div class="sections-container">
+      <!-- Home Section (Initially Visible) -->
+      <div id="trigger9" class="trigger">
+        <section id="home" class="snap">
+          <div class="image-container">
+            <img
+              src="https://www.naehbar.de/assets/images/8/buntes_garn-4ddbf3fb.jpg"
+              alt="Buntes Garn"
+            />
+          </div>
+          <div class="overlay">
+            <h2>Liebe Kunden</h2>
+            <p>
+              Bitte beachten Sie die Neuen Öffnungszeiten!<br /><br />
+              Wir sind zu den genannten Öffnungszeiten für Sie da und bearbeiten
+              gerne Ihre Aufträge.<br /><br />
+              Es grüßt Sie herzlich Ihre<br /><br />
+              Birgit Dietrich
+            </p>
+          </div>
+        </section>
+      </div>
+      <div id="animation-trigger-1" class="animation-trigger"></div>
+
+      <div class="lottie-wrapper">
+        <!-- Lottie Animation Container -->
+        <div id="a1" class="lottie-overlay"></div>
+      </div>
+      <!-- Fade-In Trigger for 'Änderungen' Section 
+      <div id="fadeInTrigger" class="spacer s0"></div>-->
+
+      <!-- Änderungen Section (Initially Hidden) -->
+      <div id="trigger1" class="trigger">
+        <section id="anderungen" class="snap">
+          <!-- data-bg-color="#ffffff" -->
+          <div class="section">
+            <div class="image-container">
+              <img
+                src="https://www.naehbar.de/assets/images/2/buntes_garn_seitlich-93ea948a.jpg"
+                alt="Buntes Garn Seitlich"
+              />
+            </div>
+            <div class="overlay">
+              <h2>Änderungen</h2>
+              <p>
+                Zu eng, zu lang, verlöchert?<br /><br />
+                In unserer Schneiderei ändern, reparieren und verschönern wir
+                Kleidung aller Art nach Ihren Wünschen.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="animation-trigger-2" class="animation-trigger"></div>
+
+      <div class="lottie-wrapper">
+        <!-- Lottie Animation Container -->
+        <div id="a2" class="lottie-overlay"></div>
+      </div>
+
+      <div id="trigger2" class="trigger">
+        <section id="massanfertigung" class="snap">
+          <div class="section">
+            <div class="image-container">
+              <img
+                src="https://www.naehbar.de/assets/images/8/massanfertigung_kostueme_schneidern-7bc5c6f0.jpg"
+                alt="Maßanfertigung Kostüme Schneidern"
+              />
+            </div>
+            <div class="overlay">
+              <h2>Maßanfertigung</h2>
+              <p>
+                Sie haben besondere Vorstellungen?<br /><br />
+                Sie brauchen individuelle Lösungen?<br /><br />
+                Wir entwerfen passgenaue Schnitte und fertigen Kleidung zum
+                Wohlfühlen, Duplikat in neuem Material.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="animation-trigger-3" class="animation-trigger"></div>
+
+      <div class="lottie-wrapper">
+        <!-- Lottie Animation Container -->
+        <div id="a3" class="lottie-overlay"></div>
+      </div>
+
+      <div id="trigger3" class="trigger">
+        <section id="heimtextilien" class="snap">
+          <!--  data-bg-color="#fab900" -->
+          <div class="section">
+            <div class="image-container">
+              <img
+                src="https://www.naehbar.de/assets/images/d/gardinen_vorhaenge-e4e6a1a1.jpg"
+                alt="Gardinen und Vorhänge"
+              />
+            </div>
+            <div class="overlay">
+              <h2>Heimtextilien</h2>
+              <p>
+                Für Ihr Zuhause fertigen wir ...<br /><br />
+                Gardinen mit und ohne Raffung,<br />
+                Übergardinen und Vorhänge,<br />
+                Kissen und Kissenbezüge auch in Sondergrößen,<br />
+                Maßgefertigte Tischdecken und Hussen.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="animation-trigger-4" class="animation-trigger"></div>
+
+      <div class="lottie-wrapper">
+        <!-- Lottie Animation Container -->
+        <div id="a4" class="lottie-overlay"></div>
+      </div>
+
+      <div id="trigger4" class="trigger">
+        <section id="leder" class="snap">
+          <!-- data-bg-color="#ffffff" -->
+          <div class="section">
+            <div class="image-container">
+              <img
+                src="https://www.naehbar.de/assets/images/9/leder_naehen-ce765409.jpg"
+                alt="Leder nähen"
+              />
+            </div>
+            <div class="overlay">
+              <h2>Leder</h2>
+              <p>
+                Ob Lederbekleidung oder Motorradhose, wir können die meisten
+                Kleidungsstücke und Accessoires aus Leder bearbeiten und
+                reparieren.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="animation-trigger-5" class="animation-trigger"></div>
+
+      <div class="lottie-wrapper">
+        <!-- Lottie Animation Container -->
+        <div id="a5" class="lottie-overlay"></div>
+      </div>
+
+      <div id="trigger5" class="trigger">
+        <section id="polsterarbeiten" class="snap">
+          <!-- data-bg-color="#A8CADE"
+          data-bg-color="#A8CADE" -->
+          <div class="section">
+            <div class="image-container">
+              <img
+                src="https://www.naehbar.de/assets/images/e/polster-47e2c830.jpg"
+                alt="Polsterarbeiten"
+              />
+            </div>
+            <div class="overlay">
+              <h2>Polsterarbeiten</h2>
+              <p>
+                Auf Anfrage erneuern wir Polster und Bezüge, z.B. von Stühlen,
+                Zweiradsitzen, oder Einzelpolster von Sitzmöbeln.<br /><br />
+                Bitte sprechen Sie uns an.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="animation-trigger-6" class="animation-trigger"></div>
+
+      <div class="lottie-wrapper">
+        <!-- Lottie Animation Container -->
+        <div id="a6" class="lottie-overlay"></div>
+      </div>
+
+      <div id="trigger6" class="trigger">
+        <section id="kunststopfen" class="snap">
+          <!-- data-bg-color="#ffffff" -->
+          <div class="section">
+            <div class="image-container">
+              <img
+                src="https://www.naehbar.de/assets/images/5/nadelkissen-aeaceec7.jpg"
+                alt="Nadelkissen"
+              />
+            </div>
+            <div class="overlay">
+              <h2>Kunststopfen</h2>
+              <p>
+                Ihr hochwertiges Kleidungsstück ist beschädigt?<br /><br />
+                Wir arbeiten mit dem führenden Kunststopfer Deutschlands
+                zusammen.<br /><br />
+                Gerne begutachten wir den Schaden und beraten Sie vor
+                Auftragserteilung.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="animation-trigger-7" class="animation-trigger"></div>
+
+      <div class="lottie-wrapper">
+        <!-- Lottie Animation Container -->
+        <div id="a7" class="lottie-overlay"></div>
+      </div>
+
+      <div id="trigger7" class="trigger">
+        <section id="kontakt" class="snap">
+          <!-- data-bg-color="#ffffff" -->
+          <div class="section">
+            <div class="image-container">
+              <img
+                src="https://www.naehbar.de/assets/images/8/birgitt-77d69853.jpg"
+                alt="Kontakt"
+              />
+            </div>
+            <div class="overlay">
+              <h2>Kontaktformular</h2>
+              <p>
+                Firma<br />
+                Name*<br />
+                Straße<br />
+                Hausnr.<br />
+                PLZ<br />
+                Ort<br />
+                E-Mail*<br />
+                Telefonnr.*<br />
+                Ihr Anliegen<br /><br />
+                Die mit "*" gekennzeichneten Felder sind Pflichtfelder.<br /><br />
+                Ich habe die Datenschutzerklärung gelesen und verstanden.<br /><br />
+                Senden
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div id="triggerEnd" class="trigger"></div>
+    </div>
+
+    <!-- External Script for ScrollMagic and Lottie -->
+    <!-- <script src="scripts/sharedTriggers.js"></script> -->
+    <script src="scripts/scrollContent.js"></script>
+    <!--<script src="scripts/scrollMagic.js"></script>-->
+  </body>
+</html>
