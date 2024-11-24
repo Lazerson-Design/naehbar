@@ -3,13 +3,13 @@ const controller = new ScrollMagic.Controller();
 
 // Initialize Lottie Animations
 const animationElements = [
-  { id: "a1", path: ".public/anim1.json" },
-  { id: "a2", path: ".public/anim2.json" },
-  { id: "a3", path: ".public/anim3.json" },
-  { id: "a4", path: ".public/anim4.json" },
-  { id: "a5", path: ".public/anim5.json" },
-  { id: "a6", path: ".public/anim6.json" },
-  { id: "a7", path: ".public/anim7.json" },
+  { id: "a1", path: "public/anim1.json" },
+  { id: "a2", path: "public/anim2.json" },
+  { id: "a3", path: "public/anim3.json" },
+  { id: "a4", path: "public/anim4.json" },
+  { id: "a5", path: "public/anim5.json" },
+  { id: "a6", path: "public/anim6.json" },
+  { id: "a7", path: "public/anim7.json" },
 ];
 
 const animations = [];
