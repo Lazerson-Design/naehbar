@@ -387,3 +387,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+function isMobileDevice() {
+  return /Mobi|Android|iPhone|iPad|iPod|Windows Phone|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+}
+
+// Check if it's a mobile device
+if (isMobileDevice()) {
+  // Activate existing media query styles by toggling the active class
+  const hamburger = document.querySelector(".hamburger");
+  const navLinks = document.querySelector(".nav-links");
+
+  // Ensure the hamburger menu shows on mobile
+  hamburger.style.display = "block";
+
+  // Toggle navigation menu visibility on hamburger click
+  hamburger.addEventListener("click", () => {
+    navLinks.classList.toggle("active"); // Leverages .nav-links.active in your CSS
+  });
+}

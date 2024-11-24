@@ -217,7 +217,7 @@ body {
 }
 
 /* Show hamburger on small screens */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .hamburger {
     display: block;
     color: #006088; /* Default text color */
@@ -296,7 +296,7 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .nav-links {
     display: none; /* Hide links on small screens */
   }
