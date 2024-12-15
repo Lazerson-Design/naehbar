@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #12ccdb;
+      }
+
+      .cls-2 {
+        fill: #0fa0b3;
+      }
+
+      .cls-3 {
+        fill: #60314d;
+      }
+
+      .cls-4 {
+        fill: #492539;
+      }
+    </style>
+  </defs>
+  <!-- Generator: Adobe Illustrator 28.7.1, SVG Export Plug-In . SVG Version: 1.2.0 Build 142)  -->
+  <g>
+    <g id="Ebene_1">
+      <rect class="cls-4" x="126.6" y="138.4" width="50.9" height="222.2" transform="translate(65.8 -29.7) rotate(14.2)"/>
+      <rect class="cls-4" x="322.8" y="138.4" width="50.9" height="222.2" transform="translate(747 406) rotate(165.8)"/>
+      <rect class="cls-2" x="96.9" y="344.4" width="56.6" height="21.1" transform="translate(90.9 -19.9) rotate(14.2)"/>
+      <rect class="cls-2" x="346.6" y="344.4" width="56.6" height="21.1" transform="translate(825.4 607.2) rotate(165.8)"/>
+      <rect class="cls-4" x="212" y="124.2" width="76.7" height="172.6"/>
+      <rect class="cls-3" x="250.4" y="124.2" width="1.6" height="172.6"/>
+      <polygon class="cls-2" points="153.9 135.1 212 124.2 251.2 281.3 288.7 124.2 345.8 135.1 327.5 392.3 172.2 392.3 153.9 135.1"/>
+      <polygon class="cls-2" points="250.1 136.2 279 107.1 221.2 107.1 250.1 136.2"/>
+      <polygon class="cls-2" points="221.2 107.1 212 124.2 231.9 176 250.1 136.2 221.2 107.1"/>
+      <polygon class="cls-2" points="279.1 107.1 288.7 124.2 268.8 176 250.1 136.2 279.1 107.1"/>
+      <polygon class="cls-4" points="221.2 107.1 212 124.2 233.1 166.6 250.1 136.2 221.2 107.1"/>
+      <polygon class="cls-4" points="279.1 107.1 288.7 124.2 267.6 166.6 250.1 136.2 279.1 107.1"/>
+      <g>
+        <rect class="cls-1" x="243.4" y="138.3" width="13.1" height="18.9" rx="3.5" ry="3.5"/>
+        <path class="cls-2" d="M243.4,140.5l-10.3-5.5c-2-1-4.4.4-4.4,2.6v19.7c0,2.3,2.5,3.7,4.5,2.6l10.2-6v-13.5Z"/>
+        <path class="cls-2" d="M256.5,140.5l10.3-5.5c2-1,4.4.4,4.4,2.6v19.7c0,2.3-2.5,3.7-4.5,2.6l-10.2-6v-13.5Z"/>
+      </g>
+    </g>
+  </g>
+</svg>

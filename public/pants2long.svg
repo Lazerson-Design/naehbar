@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #f6c743;
+      }
+
+      .cls-2 {
+        fill: #492539;
+      }
+    </style>
+  </defs>
+  <!-- Generator: Adobe Illustrator 28.7.1, SVG Export Plug-In . SVG Version: 1.2.0 Build 142)  -->
+  <g>
+    <g id="Ebene_1">
+      <g>
+        <path class="cls-1" d="M318.7,36.4s-51.5,0-68.6,0-68.6,0-68.6,0l-11.9,438.1,66.1,2.1,14.4-375,14.4,375,66.1-2.1-11.9-438.1Z"/>
+        <polygon class="cls-2" points="320.2 43.8 265.5 43.8 265.5 41.1 235.1 41.1 235.1 43.8 180.4 43.8 180.4 58.5 235.1 58.5 235.1 61.2 265.5 61.2 265.5 58.5 320.2 58.5 320.2 43.8"/>
+        <rect class="cls-1" x="189.8" y="41.1" width="5.8" height="20"/>
+        <rect class="cls-1" x="220.6" y="41.1" width="5.8" height="20"/>
+        <rect class="cls-1" x="274.1" y="41.1" width="5.8" height="20"/>
+        <rect class="cls-1" x="304.9" y="41.1" width="5.8" height="20"/>
+      </g>
+    </g>
+  </g>
+</svg>

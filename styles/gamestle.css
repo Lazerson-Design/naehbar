@@ -4,7 +4,7 @@
   width: 960px;
   height: 540px;
   border: 1px solid #d3d3d3;
-  background-color: #f1f1f1;
+  background-color: #d6ffff;
   overflow: hidden;
   margin: 0 auto; /* Center on page */
 }
@@ -17,10 +17,19 @@
 
 /* Player */
 #player {
+  /* background-color: aqua; */
   position: absolute;
   width: 100px; /* Set appropriate width for animation */
   height: 100px; /* Set appropriate height for animation */
   top: 50%; /* Center vertically */
   left: 5%; /* Center horizontally */
   transform: translate(-50%, -50%); /* Offset for perfect centering */
+}
+
+#floor {
+  position: absolute;
+  width: 100%;
+  height: 2px; /* Thin line  */
+  /* background-color: red; */
+  /* background: transparent;  Invisible  */
 }

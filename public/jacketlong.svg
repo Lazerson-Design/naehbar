@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #12ccdb;
+      }
+
+      .cls-2 {
+        fill: #0fa0b3;
+      }
+
+      .cls-3 {
+        fill: #60314d;
+      }
+
+      .cls-4 {
+        fill: #492539;
+      }
+    </style>
+  </defs>
+  <!-- Generator: Adobe Illustrator 28.7.1, SVG Export Plug-In . SVG Version: 1.2.0 Build 142)  -->
+  <g>
+    <g id="Ebene_1">
+      <rect class="cls-4" x="104.2" y="64.6" width="50.9" height="383" transform="translate(66.8 -24) rotate(14.2)"/>
+      <polygon class="cls-4" points="342.9 64.2 293.6 76.7 392.4 455.6 441.7 443.1 342.9 64.2"/>
+      <rect class="cls-2" x="54.9" y="429" width="56.6" height="21.1" transform="translate(110.3 -7) rotate(14.2)"/>
+      <rect class="cls-2" x="388.2" y="436.6" width="56.6" height="21.1" transform="translate(930 778.4) rotate(165.8)"/>
+      <rect class="cls-4" x="209.3" y="52.9" width="76.7" height="172.6"/>
+      <rect class="cls-3" x="247.6" y="52.9" width="1.6" height="172.6"/>
+      <polygon class="cls-2" points="151.2 63.8 209.3 52.9 248.5 209.9 286 52.9 343 63.8 324.8 429.6 169.5 397 151.2 63.8"/>
+      <polygon class="cls-2" points="247.4 64.9 276.3 35.8 218.5 35.8 247.4 64.9"/>
+      <polygon class="cls-2" points="218.5 35.8 209.3 52.9 229.2 104.7 247.4 64.9 218.5 35.8"/>
+      <polygon class="cls-2" points="276.3 35.7 286 52.9 266.1 104.7 247.4 64.9 276.3 35.7"/>
+      <polygon class="cls-4" points="218.5 35.8 209.3 52.9 230.4 95.3 247.4 64.9 218.5 35.8"/>
+      <polygon class="cls-4" points="276.3 35.7 286 52.9 264.9 95.3 247.4 64.9 276.3 35.7"/>
+      <g>
+        <rect class="cls-1" x="240.7" y="66.9" width="13.1" height="18.9" rx="3.5" ry="3.5"/>
+        <path class="cls-2" d="M240.7,69.2l-10.3-5.5c-2-1-4.4.4-4.4,2.6v19.7c0,2.3,2.5,3.7,4.5,2.6l10.2-6v-13.5Z"/>
+        <path class="cls-2" d="M253.8,69.2l10.3-5.5c2-1,4.4.4,4.4,2.6v19.7c0,2.3-2.5,3.7-4.5,2.6l-10.2-6v-13.5Z"/>
+      </g>
+    </g>
+  </g>
+</svg>

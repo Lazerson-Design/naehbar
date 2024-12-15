@@ -1,0 +1,75 @@
+// Placeholder for particles and collision detection
+function initParticlesAndCollisions() {
+  /* console.log("initParticlesAndCollisions called"); */
+  // Create a new element for the "jacket" obstacle
+  const jacket = document.createElement("img");
+  jacket.src = "public/jacket.svg"; // Path to the jacket image
+  jacket.style.position = "absolute";
+  jacket.style.top = "50%"; // Vertical middle positioning
+  // Remove any left/right styling to avoid conflicting with transform
+  // We'll rely entirely on transform for horizontal placement
+
+  // Center vertically
+  // We'll include the vertical translate in the main transform.
+  // Start the jacket off-screen to the right using a large initial X value.
+  // Adjust this number if the jacket is not off-screen enough.
+  let jacketX = document.getElementById("gameArea").offsetWidth + 100;
+
+  // Set size to make the jacket smaller
+  jacket.style.width = "100px";
+  jacket.style.height = "auto";
+
+  // Initial transform to place the jacket off-screen to the right and vertically centered
+  jacket.style.transform = `translate(${jacketX}px, -50%)`;
+
+  // Append the jacket to the game area
+  const gameArea = document.getElementById("gameArea");
+  gameArea.appendChild(jacket);
+
+  // Define variables for smooth horizontal movement
+  let jacketSpeed = 3; // Adjust speed as needed
+  let collisionDetected = false;
+
+  // Function to move the jacket using requestAnimationFrame for smooth animation
+  function moveJacket() {
+    // Move jacket to the left by decreasing jacketX
+    jacketX -= jacketSpeed;
+
+    // Apply the transform for smooth, single-method positioning
+    jacket.style.transform = `translate(${jacketX}px, -50%)`;
+
+    // Check collision with the player
+    const player = document.getElementById("player");
+    const playerRect = player.getBoundingClientRect();
+    const jacketRect = jacket.getBoundingClientRect();
+
+    // Simple bounding box collision check
+    if (
+      playerRect.left < jacketRect.right &&
+      playerRect.right > jacketRect.left &&
+      playerRect.top < jacketRect.bottom &&
+      playerRect.bottom > jacketRect.top
+    ) {
+      // Collision detected!
+      collisionDetected = true;
+      // Stop movement by not requesting another frame
+      // Optionally, stop other game loops here if needed
+      jacketSpeed = 0;
+      return; // Exit the animation loop
+    }
+
+    // If jacket moves completely off-screen to the left, remove it
+    if (jacketRect.right < 0) {
+      jacket.remove();
+      return; // Exit the animation loop
+    }
+
+    // If no collision and not off-screen, continue animating
+    if (!collisionDetected) {
+      requestAnimationFrame(moveJacket);
+    }
+  }
+
+  // Start the smooth animation
+  requestAnimationFrame(moveJacket);
+}
