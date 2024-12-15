@@ -37,25 +37,25 @@ function switchAnimation(animationType) {
   playerContainer.innerHTML = ""; // Clear the container for the new animation
 
   if (animationType === "run") {
-    runAnimation = loadAnimation("public/run.json");
+    runAnimation = loadAnimation("../public/run.json");
     runAnimation.goToAndPlay(0, true); // Start from the first frame
     currentAnimation = runAnimation; // Update current animation
     isRunning = true;
     isJumping = false; // Reset jumping state
   } else if (animationType === "idle") {
-    idleAnimation = loadAnimation("public/idle.json");
+    idleAnimation = loadAnimation("../public/idle.json");
     idleAnimation.goToAndPlay(0, true); // Start from the first frame
     currentAnimation = idleAnimation; // Update current animation
     isRunning = false;
     isJumping = false; // Reset jumping state
   } else if (animationType === "jump") {
-    jumpAnimation = loadAnimation("public/jump.json", false); // No loop for jump
+    jumpAnimation = loadAnimation("../public/jump.json", false); // No loop for jump
     jumpAnimation.goToAndPlay(0, true); // Start from the first frame
     currentAnimation = jumpAnimation; // Update current animation
     isJumping = true;
     isRunning = false;
   } else if (animationType === "death") {
-    deathAnimation = loadAnimation("public/death.json", false); // no loop for death
+    deathAnimation = loadAnimation("../public/death.json", false); // no loop for death
     deathAnimation.goToAndPlay(0, true);
     currentAnimation = deathAnimation;
     isJumping = false;
@@ -64,6 +64,10 @@ function switchAnimation(animationType) {
     deathAnimation.addEventListener("complete", () => {
       isDead = false; // Re-enable input after death animation completes
       awaitingKeyPress = true; // Now we wait for a key press before restarting
+      // Clear key states so no direction is "stuck"
+      for (const key in keyState) {
+        keyState[key] = false;
+      }
     });
 
     /* jumpAnimation.addEventListener("complete", () => {
@@ -84,7 +88,7 @@ function initAnimations() {
   playerContainer.innerHTML = "";
 
   // Load the initial idle animation
-  idleAnimation = loadAnimation("public/idle.json");
+  idleAnimation = loadAnimation("../public/idle.json");
   idleAnimation.goToAndPlay(0, true); // Ensure it starts playing
   currentAnimation = idleAnimation; // Set as current animation
 }
@@ -270,7 +274,15 @@ function moveLeft() {
   const currentLeft = parseFloat(window.getComputedStyle(player).left); // Get current 'left' position
   // If jumping, move slower (half speed), else move at normal speed
   const speed = isJumping ? 5 : 15;
-  player.style.left = currentLeft - speed + "px"; // Subtract 5px for movement to the left
+
+  let newLeft = currentLeft - speed; // Calculate new position to the left
+
+  // Prevent player from leaving the game area on the left side
+  if (newLeft < 0) {
+    newLeft = 0; // Clamp to the left boundary
+  }
+
+  player.style.left = newLeft + "px"; // Set the player's new 'left' position
   // Adjust speed of movement by changing "- 5" (e.g., use "- 10" for faster left movement)
 }
 
@@ -280,7 +292,17 @@ function moveRight() {
   const currentLeft = parseFloat(window.getComputedStyle(player).left); // Get current 'left' position
   // If jumping, move slower (half speed), else move at normal speed
   const speed = isJumping ? 5 : 15;
-  player.style.left = currentLeft + speed + "px"; // Add 5px for movement to the right
+
+  let newLeft = currentLeft + speed; // Calculate new position to the right
+
+  // Prevent player from leaving the game area on the right side
+  // Make sure gameAreaWidth is defined in initGameArea()
+  const playerWidth = player.offsetWidth;
+  if (newLeft + playerWidth > gameAreaWidth) {
+    newLeft = gameAreaWidth - playerWidth; // Clamp to the right boundary
+  }
+
+  player.style.left = newLeft + "px"; // Set the player's new 'left' position
   // Adjust speed of movement by changing "+ 5" (e.g., use "+ 10" for faster right movement)
 }
 
@@ -296,41 +318,41 @@ function jump() {
 
 // Torn variants
 const tornEnemies = [
-  "public/jackettorn.svg",
-  "public/dress1torn.svg",
-  "public/dress2torn.svg",
-  "public/dress3torn.svg",
-  "public/pants1torn.svg",
-  "public/pants2torn.svg",
-  "public/shirttorn.svg",
-  "public/suit1torn.svg",
-  "public/skirt1torn.svg",
+  "../public/jackettorn.svg",
+  "../public/dress1torn.svg",
+  "../public/dress2torn.svg",
+  "../public/dress3torn.svg",
+  "../public/pants1torn.svg",
+  "../public/pants2torn.svg",
+  "../public/shirttorn.svg",
+  "../public/suit1torn.svg",
+  "../public/skirt1torn.svg",
 ];
 
 // Crumpled variants
 const crumEnemies = [
-  "public/jacketcrum.svg",
-  "public/dress1crum.svg",
-  "public/dress2crum.svg",
-  "public/dress3crum.svg",
-  "public/pants1crum.svg",
-  "public/pants2crum.svg",
-  "public/shirtcrum.svg",
-  "public/suit1crum.svg",
-  "public/skirt1crum.svg",
+  "../public/jacketcrum.svg",
+  "../public/dress1crum.svg",
+  "../public/dress2crum.svg",
+  "../public/dress3crum.svg",
+  "../public/pants1crum.svg",
+  "../public/pants2crum.svg",
+  "../public/shirtcrum.svg",
+  "../public/suit1crum.svg",
+  "../public/skirt1crum.svg",
 ];
 
 // Long variants
 const longEnemies = [
-  "public/jacketlong.svg",
-  "public/dress1long.svg",
-  "public/dress2long.svg",
-  "public/dress3long.svg",
-  "public/pants1long.svg",
-  "public/pants2long.svg",
-  "public/shirtlong.svg",
-  "public/suit1long.svg",
-  "public/skirt1long.svg",
+  "../public/jacketlong.svg",
+  "../public/dress1long.svg",
+  "../public/dress2long.svg",
+  "../public/dress3long.svg",
+  "../public/pants1long.svg",
+  "../public/pants2long.svg",
+  "../public/shirtlong.svg",
+  "../public/suit1long.svg",
+  "../public/skirt1long.svg",
 ];
 
 // Define probabilities for each pool
@@ -448,6 +470,7 @@ function spawnEnemy() {
     scale: randomScale,
     speedFactor, // Store the speed factor so it can be applied in moveEnemies()
     type: enemyType, // store the type of the enemy
+    src: enemySrc, // store the exact enemy source
   });
 }
 
@@ -570,6 +593,7 @@ function checkCollisions() {
     ) {
       console.log("Collision detected!");
       console.log("Collided with:", enemyObj.type); // Log the type of enemy collided
+      console.log("Exact enemy:", enemyObj.src); // Log the exact enemy source
       triggerDeath();
       break;
     }
