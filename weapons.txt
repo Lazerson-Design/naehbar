@@ -1,0 +1,315 @@
+Below is a **conceptual example** of how you might integrate a “weapon system” into your existing code, and then an example of how you could handle the “needle” weapon (including a *modified* hitbox function that adds that horizontal stripe). **This is not a full copy-paste solution**, but it shows you **where** in your code you can place the weapon logic and *how* to structure it in a way that avoids duplicating large chunks of code. Tailor it to your own file organization and naming conventions.
+
+---
+
+## 1. Where to put the “Weapon System” in your code?
+
+A reasonable place is **near the top of your main game file**, after your basic variables but **before** your main logic (like `startGame()` or `initControls()`). That way, all other parts of the code (e.g., `switchAnimation()`, collision checks) can reference the weapon system.
+
+Here’s a short snippet showing what that might look like in your existing code structure:
+
+```js
+// ---------------------------------------------------
+//  Global or top-level data structures
+// ---------------------------------------------------
+
+// Keep track of the current equipped weapon
+let currentWeapon = "default";
+
+// A single object that stores all weapon-specific data
+const weaponConfigs = {
+  default: {
+    idleAnimation: "../public/idle.json",
+    runAnimation: "../public/run.json",
+    jumpAnimation: "../public/jump.json",
+    deathAnimation: "../public/death.json",
+
+    // If default just uses your existing vertical “stripe” logic:
+    getHitboxes: function (playerRect) {
+      // Your existing code for the player’s default hitbox:
+      const shrinkFactorWidth = 0.95;
+      const shrinkFactorHeight = 0.1;
+      const newWidth = playerRect.width * (1 - shrinkFactorWidth);
+      const newHeight = playerRect.height * (1 - shrinkFactorHeight);
+      const horizontalInset = (playerRect.width - newWidth) / 2;
+      const verticalInset = (playerRect.height - newHeight) / 2;
+
+      return [
+        {
+          left: playerRect.left + horizontalInset,
+          right: playerRect.right - horizontalInset,
+          top: playerRect.top + verticalInset,
+          bottom: playerRect.bottom - verticalInset,
+        },
+      ];
+    },
+  },
+
+  needle: {
+    // Paths to your “Needle” animations
+    idleAnimation: "../public/idleN.json",
+    runAnimation: "../public/runN.json",
+    jumpAnimation: "../public/jumpN.json",
+    deathAnimation: "../public/deathN.json",
+
+    /**
+     * Return one or more hitboxes. 
+     * For example, we still keep a smaller vertical stripe 
+     * AND add a horizontal “bar” across the middle 
+     * to simulate the needle’s shape.
+     */
+    getHitboxes: function (playerRect) {
+      // 1) Main vertical stripe (similar to default)
+      const shrinkFactorWidth = 0.95;
+      const shrinkFactorHeight = 0.1;
+      const newWidth = playerRect.width * (1 - shrinkFactorWidth);
+      const newHeight = playerRect.height * (1 - shrinkFactorHeight);
+      const horizontalInset = (playerRect.width - newWidth) / 2;
+      const verticalInset = (playerRect.height - newHeight) / 2;
+
+      const verticalStripe = {
+        left: playerRect.left + horizontalInset,
+        right: playerRect.right - horizontalInset,
+        top: playerRect.top + verticalInset,
+        bottom: playerRect.bottom - verticalInset,
+      };
+
+      // 2) A horizontal stripe in the middle
+      //    For example, we can take a small band around the vertical center
+      const centerY = (playerRect.top + playerRect.bottom) / 2; 
+      // how thick you want that band:
+      const bandThickness = playerRect.height * 0.05; // 5% of total height 
+      // how long you want that band:
+      const bandInsetLeft = playerRect.width * 0.2;  // how far from left edge
+      const bandInsetRight = playerRect.width * 0.2; // how far from right edge
+
+      const horizontalStripe = {
+        left: playerRect.left + bandInsetLeft,
+        right: playerRect.right - bandInsetRight,
+        top: centerY - bandThickness / 2,
+        bottom: centerY + bandThickness / 2,
+      };
+
+      // Return BOTH rectangles
+      return [verticalStripe, horizontalStripe];
+    },
+  },
+
+  // scissors: { ... },
+  // iron: { ... },
+};
+
+// ---------------------------------------------------
+//  The rest of your game logic (initAnimations, controls, etc.)
+// ---------------------------------------------------
+```
+
+Above, we keep a **single** `weaponConfigs` object with sub-objects for each weapon. Each has:
+
+- Its own set of animation paths (idle, run, jump, death, etc.).
+- A `getHitboxes()` function that returns one or more bounding boxes.
+
+If you add “scissors” or “iron,” you’d do so in the same structure.  
+
+> **Note**: You don’t *have* to do multiple rectangles. You can do just one bigger rectangle if you prefer. But returning an **array** of rectangles allows you to do more unique shapes (like your “needle cross” style) in a very flexible way.
+
+---
+
+## 2. Modify `switchAnimation()` to reference the currentWeapon
+
+Rather than having separate animations for needle or default, you can just do:
+
+```js
+function switchAnimation(animationType) {
+  const playerContainer = document.getElementById("player");
+
+  // Destroy the current animation if it exists
+  if (currentAnimation) {
+    currentAnimation.destroy();
+  }
+  playerContainer.innerHTML = "";
+
+  // Reference the weaponConfigs based on currentWeapon
+  const config = weaponConfigs[currentWeapon];
+
+  let animationPath = "";
+  if (animationType === "run") {
+    animationPath = config.runAnimation;
+    isRunning = true;
+    isJumping = false;
+  } else if (animationType === "idle") {
+    animationPath = config.idleAnimation;
+    isRunning = false;
+    isJumping = false;
+  } else if (animationType === "jump") {
+    animationPath = config.jumpAnimation;
+    isJumping = true;
+    isRunning = false;
+  } else if (animationType === "death") {
+    animationPath = config.deathAnimation;
+    isJumping = false;
+    isRunning = false;
+    // etc...
+  }
+
+  // Now load the chosen animation path
+  if (animationPath) {
+    const newAnim = loadAnimation(animationPath, animationType !== "jump"); 
+    newAnim.goToAndPlay(0, true);
+    currentAnimation = newAnim;
+  }
+}
+```
+
+That way, one function handles all weapons, simply by looking at `currentWeapon`.
+
+---
+
+## 3. Updating the collision check to handle multiple rectangles
+
+In your collision code (`checkCollisions()`), you currently do something like:
+
+```js
+const playerRect = player.getBoundingClientRect();
+
+// Currently you do your shrink to define playerHitbox...
+// Now, you can rely on the "getHitboxes" for whichever weapon we have:
+const playerHitboxes = weaponConfigs[currentWeapon].getHitboxes(playerRect);
+
+// Then, for each enemy, we see if ANY of the player's sub-rectangles collides:
+for (const enemyObj of activeEnemies) {
+  const enemyRect = enemyObj.element.getBoundingClientRect();
+  // ... etc ...
+
+  // Now loop over each player's bounding box
+  for (let box of playerHitboxes) {
+    if (
+      box.left < enemyRect.right &&
+      box.right > enemyRect.left &&
+      box.top < enemyRect.bottom &&
+      box.bottom > enemyRect.top
+    ) {
+      // We have a collision
+      console.log("Collision detected with currentWeapon:", currentWeapon);
+      // If weapon is "needle," do special effect, then revert
+      if (currentWeapon === "needle") {
+        // e.g. destroy enemy, add score, or something
+        // Then revert to default animations:
+        currentWeapon = "default";
+        switchAnimation("idle");
+      } else {
+        // normal or other weapon logic...
+      }
+
+      // Possibly break out if you only handle one collision
+      break;
+    }
+  }
+}
+```
+
+Now your code checks **all** bounding boxes returned by `getHitboxes()`. For the “needle,” that includes your original vertical stripe **plus** the new horizontal band in the middle.
+
+---
+
+## 4. Equipping the weapon with keys (1, 2, 3)
+
+In your `initControls()` or wherever you handle keydown, you can do:
+
+```js
+document.addEventListener("keydown", (event) => {
+  if (isDead) return;
+  if (awaitingKeyPress) return;
+
+  // Switch weapon
+  if (event.key === "1") {
+    currentWeapon = "needle";
+    switchAnimation("idle"); 
+  } else if (event.key === "2") {
+    currentWeapon = "scissors";
+    switchAnimation("idle");
+  } else if (event.key === "3") {
+    currentWeapon = "iron";
+    switchAnimation("idle");
+  }
+
+  // The rest of your movement logic:
+  if (controls[event.key] !== undefined) {
+    // ...
+  }
+});
+```
+
+This means pressing **1** sets the needle as the active weapon and immediately swaps to that idle animation.  
+
+---
+
+## 5. Example “Full Code” for the Needle portion
+
+Below is a **consolidated** snippet specifically for the Needle part—imagine you place this inside your `weaponConfigs` definition. It demonstrates how you might define the animations and a custom hitbox that’s effectively two rectangles. Use or tweak as needed:
+
+```js
+// Inside your global weaponConfigs structure:
+needle: {
+  // Animations
+  idleAnimation: "../public/idleN.json",
+  runAnimation: "../public/runN.json",
+  jumpAnimation: "../public/jumpN.json",
+  deathAnimation: "../public/deathN.json",
+
+  // Custom bounding boxes
+  getHitboxes: function (playerRect) {
+    // 1) Vertical stripe (like default, but you can tweak)
+    const shrinkFactorWidth = 0.95;
+    const shrinkFactorHeight = 0.1;
+    const newWidth = playerRect.width * (1 - shrinkFactorWidth);
+    const newHeight = playerRect.height * (1 - shrinkFactorHeight);
+    const horizontalInset = (playerRect.width - newWidth) / 2;
+    const verticalInset = (playerRect.height - newHeight) / 2;
+
+    const verticalStripe = {
+      left: playerRect.left + horizontalInset,
+      right: playerRect.right - horizontalInset,
+      top: playerRect.top + verticalInset,
+      bottom: playerRect.bottom - verticalInset,
+    };
+
+    // 2) Horizontal “stripe” across the middle
+    const centerY = (playerRect.top + playerRect.bottom) / 2;
+    const bandThickness = playerRect.height * 0.05; 
+    const bandInsetLeft = playerRect.width * 0.2;
+    const bandInsetRight = playerRect.width * 0.2;
+
+    const horizontalStripe = {
+      left: playerRect.left + bandInsetLeft,
+      right: playerRect.right - bandInsetRight,
+      top: centerY - bandThickness / 2,
+      bottom: centerY + bandThickness / 2,
+    };
+
+    // Return both 
+    return [verticalStripe, horizontalStripe];
+  },
+},
+```
+
+Wherever you do your collision detection, you’d use:
+```js
+const playerHitboxes = weaponConfigs[currentWeapon].getHitboxes(
+  player.getBoundingClientRect()
+);
+```
+…then check collisions on each of those rectangles against the enemies.
+
+---
+
+## Putting it all together
+
+1. **Create** a single `weaponConfigs` object near the top of your file.  
+2. **Add** an entry for each weapon you have. Provide animation paths and a `getHitboxes()` function.  
+3. **Modify** `currentWeapon` whenever the player presses the “1”, “2”, or “3” keys.  
+4. **Change** your existing `switchAnimation()` to look up the JSON files from `weaponConfigs[currentWeapon]`.  
+5. **In** your collision logic, call the weapon’s `getHitboxes(playerRect)` method so you can do collisions with all relevant bounding boxes.  
+6. **After** collision, if the weapon is “used up,” revert `currentWeapon` back to `"default"` and switch to the default idle animation.  
+
+This approach avoids writing a big chunk of duplicated code for each weapon. Instead, each weapon only supplies the *differences* (unique animations, unique hitboxes, unique collision behavior), while everything else flows through your existing `switchAnimation` and collision loop.

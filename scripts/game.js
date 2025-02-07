@@ -13,6 +13,22 @@ let activeEnemies = [];
 let lastSpawnTime = 0;
 let spawnInterval;
 let awaitingKeyPress = false;
+let currentWeapon = null; // "needle", "scissors", or "iron"
+let ironSpeed = 0; // We'll update this later
+let enemiesPassed = 0; // global variable for enemies passing the player
+let sewedCount = 0; //needle + torn
+let cutCount = 0; // scissors + long
+let ironedCount = 0; // iron + scrum
+// Global variables for weapon pickups and ammo counts:
+let activeWeapons = [];
+let lastWeaponSpawnTime = 0;
+let weaponSpawnInterval = 3000; // e.g., spawn a weapon every 3 seconds (adjust as desired)
+// Global ammo counts:
+let ammoCounts = {
+  needle: 0,
+  scissors: 0,
+  iron: 0,
+};
 
 // Function to load an animation dynamically
 function loadAnimation(path, loop = true, autoplay = true) {
@@ -30,54 +46,89 @@ function loadAnimation(path, loop = true, autoplay = true) {
 function switchAnimation(animationType) {
   const playerContainer = document.getElementById("player");
 
-  // Destroy only the current animation
   if (currentAnimation) {
     currentAnimation.destroy();
   }
-  playerContainer.innerHTML = ""; // Clear the container for the new animation
+  playerContainer.innerHTML = "";
 
+  let animPath = "";
+  let weaponLetter = "";
+
+  // Build animation path as before...
+  if (currentWeapon) {
+    if (currentWeapon === "needle") {
+      weaponLetter = "N";
+    } else if (currentWeapon === "scissors") {
+      weaponLetter = "S";
+    } else if (currentWeapon === "iron") {
+      weaponLetter = "I";
+    }
+
+    if (animationType === "idle") {
+      animPath = `../public/idle${weaponLetter}.json`;
+    } else if (animationType === "run") {
+      animPath = `../public/run${weaponLetter}.json`;
+    } else if (animationType === "jump") {
+      animPath = `../public/jump${weaponLetter}.json`;
+    } else if (animationType === "death") {
+      animPath = `../public/death${weaponLetter}.json`;
+    }
+  } else {
+    if (animationType === "idle") {
+      animPath = "../public/idle.json";
+    } else if (animationType === "run") {
+      animPath = "../public/run.json";
+    } else if (animationType === "jump") {
+      animPath = "../public/jump.json";
+    } else if (animationType === "death") {
+      animPath = "../public/death.json";
+    }
+  }
+
+  let anim;
+  if (animationType === "jump" || animationType === "death") {
+    anim = loadAnimation(animPath, false);
+  } else {
+    anim = loadAnimation(animPath, true);
+  }
+  anim.goToAndPlay(0, true);
+  currentAnimation = anim;
+
+  // Apply the specific scale for this animation type and weapon combination
+  const scale = currentWeapon
+    ? animationScales[animationType][currentWeapon]
+    : animationScales[animationType].unarmed;
+
+  adjustPlayerScale(scale);
+
+  // Update state flags.
   if (animationType === "run") {
-    runAnimation = loadAnimation("../public/run.json");
-    runAnimation.goToAndPlay(0, true); // Start from the first frame
-    currentAnimation = runAnimation; // Update current animation
     isRunning = true;
-    isJumping = false; // Reset jumping state
+    isJumping = false;
   } else if (animationType === "idle") {
-    idleAnimation = loadAnimation("../public/idle.json");
-    idleAnimation.goToAndPlay(0, true); // Start from the first frame
-    currentAnimation = idleAnimation; // Update current animation
     isRunning = false;
-    isJumping = false; // Reset jumping state
+    isJumping = false;
   } else if (animationType === "jump") {
-    jumpAnimation = loadAnimation("../public/jump.json", false); // No loop for jump
-    jumpAnimation.goToAndPlay(0, true); // Start from the first frame
-    currentAnimation = jumpAnimation; // Update current animation
     isJumping = true;
     isRunning = false;
   } else if (animationType === "death") {
-    deathAnimation = loadAnimation("../public/death.json", false); // no loop for death
-    deathAnimation.goToAndPlay(0, true);
-    currentAnimation = deathAnimation;
     isJumping = false;
     isRunning = false;
-    // Add the event listener here, where deathAnimation is guaranteed to exist:
-    deathAnimation.addEventListener("complete", () => {
-      isDead = false; // Re-enable input after death animation completes
-      awaitingKeyPress = true; // Now we wait for a key press before restarting
-      // Clear key states so no direction is "stuck"
+    anim.addEventListener("complete", () => {
+      isDead = false;
+      awaitingKeyPress = true;
       for (const key in keyState) {
         keyState[key] = false;
       }
     });
-
-    /* jumpAnimation.addEventListener("complete", () => {
-      // Only switch to idle if still jumping and no keys are pressed
-      if (isJumping && !Object.values(keyState).some((state) => state)) {
-        isJumping = false;
-        switchAnimation("idle");
-      }
-    }); */
   }
+
+  /*  // Apply a scale adjustment based on whether a weapon is equipped.
+  if (currentWeapon) {
+    adjustPlayerScale(weaponScales[currentWeapon] || 1.0);
+  } else {
+    adjustPlayerScale(weaponScales.unarmed);
+  } */
 }
 
 // Function to initialize animations
@@ -93,28 +144,90 @@ function initAnimations() {
   currentAnimation = idleAnimation; // Set as current animation
 }
 
-// Example event listeners for triggering animations
-document.addEventListener("keydown", (event) => {
-  if (event.code === "ArrowUp" && !isJumping) {
-    // Trigger jump animation when the up arrow is pressed and not already jumping
-    switchAnimation("jump");
-  } else if (event.code === "ArrowRight" && !isJumping) {
-    // Trigger run animation when the right arrow is pressed
-    switchAnimation("run");
-  } else if (event.code === "ArrowDown" && !isJumping) {
-    // Trigger idle animation when the down arrow is pressed
-    switchAnimation("idle");
+function getCollisionOverlay() {
+  let overlay = document.getElementById("collision-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "collision-overlay";
+    overlay.style.position = "absolute";
+    // We no longer set top/left here; they will be updated in playCollisionOverlay.
+    overlay.style.width = "100%"; // or a specific size if desired
+    overlay.style.height = "30vh"; // adjust as needed
+    overlay.style.pointerEvents = "none";
+    const gameArea = document.getElementById("gameArea");
+    if (gameArea) {
+      gameArea.appendChild(overlay);
+    } else {
+      document.body.appendChild(overlay);
+    }
   }
-});
+  return overlay;
+}
+
+function playCollisionOverlay(type, collisionPoint) {
+  // Get the game area container and its bounding rectangle.
+  const gameArea = document.getElementById("gameArea");
+  const gameAreaRect = gameArea.getBoundingClientRect();
+
+  // Get (or create) the overlay element.
+  let overlay = document.getElementById("collision-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "collision-overlay";
+    overlay.style.position = "absolute";
+    overlay.style.pointerEvents = "none";
+    // Append the overlay to the game area.
+    gameArea.appendChild(overlay);
+  }
+
+  // Compute the collision point relative to the game area.
+  // collisionPoint is assumed to be an object with absolute coordinates {x, y}
+  const relX = collisionPoint.x - gameAreaRect.left;
+  const relY = collisionPoint.y - gameAreaRect.top;
+
+  // Set the overlay's position relative to the game area.
+  overlay.style.left = relX + "px";
+  overlay.style.top = relY + "px";
+
+  // Adjust the overlay size relative to the game area.
+  // For example, if you want the overlay to be 10% of the game area height:
+  overlay.style.width = gameAreaRect.width * 0.1 + "px";
+  overlay.style.height = gameAreaRect.height * 0.1 + "px";
+
+  // Clear any previous content.
+  overlay.innerHTML = "";
+
+  // Determine the animation file path based on the collision type.
+  let animPath = "";
+  if (type === "yarn") {
+    animPath = "../public/yarn.json";
+  } else if (type === "steam") {
+    animPath = "../public/short.json";
+  } else if (type === "short") {
+    animPath = "../public/steam.json";
+  }
+
+  // Load the overlay animation using Lottie.
+  const overlayAnimation = lottie.loadAnimation({
+    container: overlay,
+    renderer: "svg",
+    loop: false,
+    autoplay: true,
+    path: animPath,
+  });
+
+  // When the overlay animation completes, clear its content so it disappears.
+  overlayAnimation.addEventListener("complete", () => {
+    overlay.innerHTML = "";
+  });
+}
 
 // /*GameArea and Background*/
 
 // Store game area dimensions
 let gameAreaWidth = 0;
 let gameAreaHeight = 0;
-
-// Movement and speed
-let speedX = 0; // Horizontal speed based on game area width
+let floorY = 0; // Floor position
 
 // Function to initialize the game area
 function initGameArea() {
@@ -124,8 +237,8 @@ function initGameArea() {
   gameAreaWidth = gameArea.offsetWidth;
   gameAreaHeight = gameArea.offsetHeight;
 
-  // Set speedX dynamically as 1% of gameArea width
-  speedX = gameAreaWidth * 0.01;
+  // Now update ironSpeed based on the new gameAreaHeight
+  ironSpeed = gameAreaHeight * 0.005;
 
   // Initialize the floor
   initFloor();
@@ -134,10 +247,10 @@ function initGameArea() {
   initBackground();
 }
 
-//initiate Floor
+// Initialize Floor
 function initFloor() {
   const floor = document.getElementById("floor");
-  floorY = gameAreaHeight * 0.9; //adjust Floor here!
+  floorY = gameAreaHeight * 0.9; // Floor at 90% of game area height
   floor.style.top = floorY + "px";
 }
 
@@ -146,18 +259,200 @@ function initBackground() {
   // Code to initialize the background
 }
 
+function adjustPlayerScale(scale) {
+  const player = document.getElementById("player");
+  // Apply both centering and scaling
+  player.style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+
+const animationScales = {
+  idle: {
+    needle: 1.4,
+    scissors: 1.4,
+    iron: 1.7,
+    unarmed: 1.0,
+  },
+  run: {
+    needle: 2, // Adjust these values based on testing
+    scissors: 1.6,
+    iron: 2.2,
+    unarmed: 1.0,
+  },
+  jump: {
+    needle: 2, // Adjust these values based on testing
+    scissors: 2,
+    iron: 1.9,
+    unarmed: 1.0,
+  },
+  death: {
+    needle: 1.4, // Adjust these values based on testing
+    scissors: 1.4,
+    iron: 1.6,
+    unarmed: 1.0,
+  },
+};
+
+// Player (red) hitbox configurations by state and weapon type
+const playerHitboxConfigurations = {
+  idle: {
+    unarmed: {
+      width: 0.3, // 30% of player width
+      height: 0.95, // 80% of player height
+      offsetX: 0, // no offset
+      offsetY: 0,
+    },
+    needle: {
+      width: 0.25,
+      height: 0.68,
+      offsetX: -0.025, // shift 10% of player width to right
+      offsetY: 0,
+    },
+    scissors: {
+      width: 0.25,
+      height: 0.68,
+      offsetX: -0.025,
+      offsetY: 0,
+    },
+    iron: {
+      width: 0.2,
+      height: 0.6,
+      offsetX: -0.165, // shift left 5% of player width
+      offsetY: -0.065,
+    },
+  },
+  run: {
+    unarmed: {
+      width: 0.3,
+      height: 0.85,
+      offsetX: 0.1,
+      offsetY: 0,
+    },
+    needle: {
+      width: 0.18,
+      height: 0.45,
+      offsetX: -0.025,
+      offsetY: 0.01,
+    },
+    scissors: {
+      width: 0.18,
+      height: 0.53,
+      offsetX: -0.02,
+      offsetY: 0.01,
+    },
+    iron: {
+      width: 0.2,
+      height: 0.4,
+      offsetX: -0.05,
+      offsetY: -0.26,
+    },
+  },
+  jump: {
+    unarmed: {
+      width: 0.3,
+      height: 0.7,
+      offsetX: 0.1,
+      offsetY: -0.1,
+    },
+    needle: {
+      width: 0.25,
+      height: 0.4,
+      offsetX: 0,
+      offsetY: 0,
+    },
+    scissors: {
+      width: 0.16,
+      height: 0.4,
+      offsetX: 0.04,
+      offsetY: -0.03,
+    },
+    iron: {
+      width: 0.2,
+      height: 0.4,
+      offsetX: -0.17,
+      offsetY: -0.26,
+    },
+  },
+};
+
+// Weapon (blue) hitbox configurations for each animation state and weapon type.
+// All values are expressed as fractions of the player's current width/height.
+const weaponHitboxConfigurations = {
+  idle: {
+    // When the player is idle and has the needle equipped:
+    needle: {
+      width: 0.35, // The weapon hitbox's width will equal 100% of the player's width.
+      height: 0.1, // The weapon hitbox's height will be 20% of the player's height.
+      offsetX: 0.55, // The hitbox will start at 100% of the player's width (i.e. at the right edge).
+      offsetY: 0.15, // The hitbox is positioned at 95% down from the top of the player's area.
+    },
+    scissors: {
+      width: 0.2, // 25% of the player's width.
+      height: 0.15, // 25% of the player's height.
+      offsetX: 0.75, // The hitbox starts at 12% of the player's width from the left edge.
+      offsetY: 0.35, // The hitbox is shifted upward by 5% of the player's height.
+    },
+    iron: {
+      width: 0.45, // 30% of the player's width.
+      height: 0.4, // 30% of the player's height.
+      offsetX: 0.45, // The hitbox starts 15% of the player's width from the left edge.
+      offsetY: 0.46, // The hitbox is shifted upward by 10% of the player's height.
+    },
+  },
+  run: {
+    needle: {
+      width: 0.4,
+      height: 0.02,
+      offsetX: 0.56,
+      offsetY: 0.49,
+    },
+    scissors: {
+      width: 0.4,
+      height: 0.1,
+      offsetX: 0.54,
+      offsetY: 0.47,
+    },
+    iron: {
+      width: 0.36,
+      height: 0.3,
+      offsetX: 0.46,
+      offsetY: 0.3,
+    },
+  },
+  jump: {
+    needle: {
+      width: 0.3,
+      height: 0.05,
+      offsetX: 0.65,
+      offsetY: 0.45,
+    },
+    scissors: {
+      width: 0.4,
+      height: 0.1,
+      offsetX: 0.49,
+      offsetY: 0.41,
+    },
+    iron: {
+      width: 0.36,
+      height: 0.3,
+      offsetX: 0.48,
+      offsetY: 0.35,
+    },
+  },
+};
+
 // /*Physics*/
 
 // Physics variables
-let gravity = 1; // Gravity acceleration
+let gravity = 0; // Gravity acceleration (will be set based on gameAreaHeight)
 let gravitySpeed = 0; // Accumulated gravity speed
 let playerY = 0; // Player's vertical position
-let speedY = 0; // Player's vertical speed
+let speedY = 0; // Player's vertical speed (unused currently)
 
 // Function to initialize physics
 function initPhysics() {
   const player = document.getElementById("player");
   playerY = parseFloat(window.getComputedStyle(player).top);
+  gravity = gameAreaHeight * 0.002; // Set gravity relative to game area height
 
   // Start the physics update loop
   setInterval(updatePhysics, 20); // Update physics every 20ms
@@ -170,13 +465,13 @@ function updatePhysics() {
   playerY += speedY + gravitySpeed;
 
   // Collision detection with ground (assuming ground is at the bottom of game area)
-  const groundY = floorY; // floorY is set in GameArea section (initiate Floor)
+  const groundY = floorY; // floorY is set in initFloor
   if (playerY + player.offsetHeight / 2 >= groundY) {
     playerY = groundY - player.offsetHeight / 2;
     gravitySpeed = 0; // Reset gravity speed when on ground
     if (isJumping) {
       // Only proceed if the player was jumping
-      isJumping = false; // Reset jumping state here
+      isJumping = false; // Reset jumping state
 
       // Check if any movement keys are currently pressed
       if (Object.values(keyState).some((state) => state)) {
@@ -200,7 +495,7 @@ function updatePhysics() {
 
 // /*Controls*/
 
-// Controls
+// Controls mapped to keys (using 'a', 'd', and 'w')
 const controls = {
   a: moveLeft, // A key triggers moveLeft
   d: moveRight, // D key triggers moveRight
@@ -218,42 +513,48 @@ function initControls() {
 
   // Event listener for key press
   document.addEventListener("keydown", (event) => {
-    if (isDead) return; // If dead, ignore key presses
+    if (isDead) return;
     if (awaitingKeyPress) {
-      // The death animation finished and we're waiting for a key press
-      // to restart the game loop and spawning.
       awaitingKeyPress = false;
       resetGame();
       return;
     }
+
+    // Handle movement keys (a, d, w) first.
     if (controls[event.key] !== undefined) {
-      // Check if the key is mapped in controls
       if (event.key === "w" && !isJumping) {
-        // Trigger jump only if not already jumping
-        controls[event.key](); // Call the jump function directly
+        controls[event.key]();
       } else if (event.key !== "w") {
-        // For other keys, update key state
         keyState[event.key] = true;
+        // Only switch to run if no weapon is active.
         if (!isRunning && !isJumping) {
           isRunning = true;
-          switchAnimation("run"); // Start run animation
+          switchAnimation("run");
         }
       }
+    }
+
+    // Weapon keys (1, 2, 3)
+    if (event.key === "1") {
+      switchWeapon("needle");
+    } else if (event.key === "2") {
+      switchWeapon("scissors");
+    } else if (event.key === "3") {
+      switchWeapon("iron");
     }
   });
 
   // Event listener for key release
   document.addEventListener("keyup", (event) => {
-    if (isDead) return; // If dead, ignore key releases
+    if (isDead) return;
     if (controls[event.key] !== undefined && event.key !== "w") {
-      // Check if the key is mapped in controls and is not 'w' (jump key)
-      keyState[event.key] = false; // Set key state to false
+      keyState[event.key] = false;
     }
 
-    // Stop running animation when no keys are active and not jumping
+    // Switch to idle if no movement keys are active and not jumping.
     if (!Object.values(keyState).some((state) => state) && !isJumping) {
       isRunning = false;
-      switchAnimation("idle"); // Switch back to idle animation
+      switchAnimation("idle");
     }
   });
 
@@ -264,57 +565,83 @@ function initControls() {
         controls[key](); // Trigger the movement function mapped to the key
       }
     }
-  }, 20); // Adjust speed of movement by changing this interval (e.g., lower for faster)
+  }, 20); // Adjust speed of movement by changing this interval
 }
 
 // Movements
 function moveLeft() {
-  if (isDead) return; // Prevent any movement if isDead is true
-  const player = document.getElementById("player"); // Get the player element
-  const currentLeft = parseFloat(window.getComputedStyle(player).left); // Get current 'left' position
-  // If jumping, move slower (half speed), else move at normal speed
-  const speed = isJumping ? 5 : 15;
-
-  let newLeft = currentLeft - speed; // Calculate new position to the left
-
-  // Prevent player from leaving the game area on the left side
+  if (isDead) return;
+  const player = document.getElementById("player");
+  const currentLeft = parseFloat(window.getComputedStyle(player).left);
+  // Movement speed relative to game area width
+  const speed = isJumping ? gameAreaHeight * 0.008 : gameAreaHeight * 0.02; //Geschwindigkeit in der luft oder auf dem boden
+  let newLeft = currentLeft - speed;
   if (newLeft < 0) {
-    newLeft = 0; // Clamp to the left boundary
+    newLeft = 0;
   }
-
-  player.style.left = newLeft + "px"; // Set the player's new 'left' position
-  // Adjust speed of movement by changing "- 5" (e.g., use "- 10" for faster left movement)
+  player.style.left = newLeft + "px";
 }
 
 function moveRight() {
-  if (isDead) return; // Prevent any movement if isDead is true
-  const player = document.getElementById("player"); // Get the player element
-  const currentLeft = parseFloat(window.getComputedStyle(player).left); // Get current 'left' position
-  // If jumping, move slower (half speed), else move at normal speed
-  const speed = isJumping ? 5 : 15;
-
-  let newLeft = currentLeft + speed; // Calculate new position to the right
-
-  // Prevent player from leaving the game area on the right side
-  // Make sure gameAreaWidth is defined in initGameArea()
+  if (isDead) return;
+  const player = document.getElementById("player");
+  const currentLeft = parseFloat(window.getComputedStyle(player).left);
+  // Movement speed relative to game area width
+  const speed = isJumping ? gameAreaHeight * 0.008 : gameAreaHeight * 0.02; //Geschwindigkeit in der luft oder auf dem boden
+  let newLeft = currentLeft + speed;
   const playerWidth = player.offsetWidth;
   if (newLeft + playerWidth > gameAreaWidth) {
-    newLeft = gameAreaWidth - playerWidth; // Clamp to the right boundary
+    newLeft = gameAreaWidth - playerWidth;
   }
-
-  player.style.left = newLeft + "px"; // Set the player's new 'left' position
-  // Adjust speed of movement by changing "+ 5" (e.g., use "+ 10" for faster right movement)
+  player.style.left = newLeft + "px";
 }
 
-// Jump function
 function jump() {
-  if (isJumping) return; // Prevent double jumps
-  isJumping = true; // Set jumping state
-  gravitySpeed = -25; // Initial upward speed (negative to go up)
-  switchAnimation("jump"); // Switch to jump animation
+  if (isJumping) return;
+  isJumping = true;
+
+  // Set the desired maximum jump height (20% of gameAreaHeight)
+  const desiredJumpHeight = gameAreaHeight * 0.7;
+
+  // Use the gravity value (set in initPhysics) and the physics formula:
+  // v = sqrt(2 * gravity * desiredJumpHeight)
+  const initialJumpSpeed = Math.sqrt(2 * gravity * desiredJumpHeight);
+
+  // Set the upward speed (negative because upward is negative)
+  gravitySpeed = -initialJumpSpeed;
+
+  switchAnimation("jump");
+}
+
+function switchWeapon(weapon) {
+  if (currentWeapon === weapon) {
+    // Weapon is already active; deselect it.
+    currentWeapon = null;
+    console.log(`${weapon} deselected, switching to idle`);
+    switchAnimation("idle");
+  } else {
+    // Equip the new weapon.
+    currentWeapon = weapon;
+    console.log(`${weapon} is equipped`);
+    // For now, default to the idle state for the equipped weapon.
+    switchAnimation("idle");
+  }
 }
 
 // /*Particles and Collisions*/
+
+// repaired variants
+const repairedEnemies = [
+  "../public/jacket.svg",
+  "../public/dress1.svg",
+  "../public/dress2.svg",
+  "../public/dress3.svg",
+  "../public/pants1.svg",
+  "../public/pants2.svg",
+  "../public/shirt.svg",
+  "../public/suit1.svg",
+  "../public/skirt1.svg",
+];
 
 // Torn variants
 const tornEnemies = [
@@ -368,48 +695,54 @@ function getRandomSpawnInterval(min, max) {
  * The main game loop, called every frame
  */
 function gameLoop() {
-  if (isDead) {
-    // If isDead is true, return early and do not request another animation frame.
-    return;
-  }
-  spawnEnemy(); // Attempt to spawn a new enemy if enough time has passed
-  moveEnemies(); // Move all active enemies
+  if (isDead) return;
+  spawnEnemy();
+  spawnWeapon(); // spawn pickups
+  moveEnemies();
+  moveWeapons(); // update pickups movement
   checkCollisions();
-  requestAnimationFrame(gameLoop); // Request the next frame
+  checkWeaponPickups(); // check for pickups
+  requestAnimationFrame(gameLoop);
 }
 
 function resetGame() {
-  // Access activeEnemies here since it's globally defined now
-  activeEnemies.forEach((enemyObj) => enemyObj.element.remove());
+  currentWeapon = null; // Unarm the player on respawn
+  activeEnemies.forEach((enemyObj) => {
+    if (enemyObj.debugDiv) {
+      enemyObj.debugDiv.remove(); // Remove the enemy's debug element
+    }
+    enemyObj.element.remove();
+  });
   activeEnemies.length = 0;
   lastSpawnTime = Date.now();
   spawnInterval = getRandomSpawnInterval(600, 1700);
+
+  // Optionally clear any global debug elements
+  clearDebugHitboxes();
+
   requestAnimationFrame(gameLoop);
 }
 
 // Function to spawn a new enemy if enough time has passed
 function spawnEnemy() {
-  const now = Date.now(); // Get the current time
+  const now = Date.now();
   if (now - lastSpawnTime < spawnInterval) {
-    // Not enough time has passed since the last spawn
     return;
   }
-
-  // Update the last spawn time
   lastSpawnTime = now;
+  spawnInterval = getRandomSpawnInterval(400, 1700);
 
-  // Update the spawn interval to a new random value
-  spawnInterval = getRandomSpawnInterval(300, 1700);
+  const enemySrc = pickRandomEnemy();
+  const enemy = document.createElement("img");
+  enemy.src = enemySrc;
+  enemy.style.position = "absolute";
 
-  // Create a new enemy element
-  const enemySrc = pickRandomEnemy(); // Select a random enemy from the pools
-  const enemy = document.createElement("img"); // Create an <img> element
-  enemy.src = enemySrc; // Set the image source
-  enemy.style.position = "absolute"; // Position it absolutely
-  enemy.style.width = "100px"; // Set a default width
-  enemy.style.height = "auto"; // Maintain aspect ratio
+  // Set enemy width relative to game area width (e.g., 10% of game area width)
+  const enemyWidth = gameAreaHeight * 0.1; // enemy will be 10% of game area height
+  enemy.style.width = enemyWidth + "px";
+  enemy.style.height = "auto";
 
-  // After deciding enemySrc, also store its type:
+  // Determine enemy type based on source
   let enemyType;
   if (tornEnemies.includes(enemySrc)) {
     enemyType = "torn";
@@ -419,46 +752,38 @@ function spawnEnemy() {
     enemyType = "long";
   }
 
-  // Position the enemy off-screen to the right
   const gameArea = document.getElementById("gameArea");
-  const enemyX = gameArea.offsetWidth + 100; // Initial X position off-screen
+  // Spawn enemy off-screen to the right (10% beyond game area width)
+  const enemyX = gameAreaWidth * 1.1;
 
   // Random scale between 0.5 and 1.5
-  const randomScale = Math.random() * (1.3 - 0.7) + 0.5; // Scale range: 0.5 to 1.5
+  const randomScale = Math.random() * (1.5 - 0.5) + 0.8;
 
-  // Define margins to ensure enemies don't spawn too close to the top or bottom
-  // Increasing these margins will keep enemies away from the edges.
-  const topMargin = 200; // Margin from the top
-  const bottomMargin = 200; // Margin from the bottom
-
-  // Randomize the initial vertical placement within the game area height
-  const gameAreaHeight = gameArea.offsetHeight;
-  // Calculate available height by subtracting both margins
+  // Define margins as percentages of game area height
+  const topMargin = gameAreaHeight * 0.2;
+  const bottomMargin = gameAreaHeight * 0.2;
   const availableHeight = gameAreaHeight - topMargin - bottomMargin;
-  // Now pick a random Y position within this constrained range
   const randomY = Math.floor(Math.random() * availableHeight) + topMargin;
 
-  // IMPORTANT: We now incorporate randomY directly into the transform instead of using 'top'
-  // This ensures vertical positioning is handled purely via transform.
+  // Position the enemy using transform for relative positioning
   enemy.style.transform = `translate(${enemyX}px, ${randomY}px) scale(${randomScale})`;
 
-  gameArea.appendChild(enemy); // Add the enemy to the game area
+  gameArea.appendChild(enemy);
 
   // Determine wiggle parameters and speed factor based on enemy type
-  let wiggleAmplitude = 0; // Default: no wiggle
-  let wiggleFrequency = 0; // Default: no wiggle
-  let speedFactor = 1; // Default speed (no slowdown)
-
+  let wiggleAmplitude = 0;
+  let wiggleFrequency = 0;
+  let speedFactor = 1;
   if (tornEnemies.includes(enemySrc)) {
-    wiggleAmplitude = 50; // Torn enemies wiggle more
-    wiggleFrequency = 0.5; // Frequency of wiggle
-    speedFactor = 0.7; // Torn enemies move at 80% of normal speed (20% slower)
+    wiggleAmplitude = gameAreaHeight * 0.06; // Torn enemies wiggle more
+    wiggleFrequency = 0.5;
+    speedFactor = 0.7;
   } else if (longEnemies.includes(enemySrc)) {
-    wiggleAmplitude = 10; // Long enemies wiggle less
-    wiggleFrequency = 0.3; // Lower frequency
-    speedFactor = 0.9; // Long enemies move at 50% of normal speed
+    wiggleAmplitude = gameAreaHeight * 0.02; // Long enemies wiggle less
+    wiggleFrequency = 0.3;
+    speedFactor = 0.9;
   }
-  // Crumpled enemies have default values (no wiggle, speedFactor = 1)
+  // Crumpled enemies have default values
 
   activeEnemies.push({
     element: enemy,
@@ -468,136 +793,290 @@ function spawnEnemy() {
     wiggleFrequency,
     startTime: now,
     scale: randomScale,
-    speedFactor, // Store the speed factor so it can be applied in moveEnemies()
-    type: enemyType, // store the type of the enemy
-    src: enemySrc, // store the exact enemy source
+    speedFactor,
+    type: enemyType,
+    src: enemySrc,
   });
 }
 
-// Function to move enemies and handle their removal when off-screen
+// Function to move enemies, count them when they pass the player,
+// and remove them if they move far off the left side of the screen.
 function moveEnemies() {
-  if (isDead) {
-    // If isDead is true, just return and don't move enemies
-    return;
-  }
-  const baseEnemySpeed = 3; // Base horizontal speed
+  if (isDead) return;
 
+  // Base enemy speed relative to game area height
+  const baseEnemySpeed = gameAreaHeight * 0.003;
+
+  // Get the player's bounding rectangle
+  const playerRect = document.getElementById("player").getBoundingClientRect();
+
+  // Loop backwards through activeEnemies array
   for (let i = activeEnemies.length - 1; i >= 0; i--) {
     const enemyObj = activeEnemies[i];
 
-    // Adjust speed by this enemy’s speed factor
+    // Update enemy position based on its speed factor
     const enemySpeed = baseEnemySpeed * enemyObj.speedFactor;
+    enemyObj.x -= enemySpeed;
 
-    // Move enemy left
-    enemyObj.x -= enemySpeed; // Reduce X position by the adjusted speed
-    // Calculate wiggle offset using a sine wave
-    let wiggleOffset = 0; // Default wiggle offset is zero (no vertical movement if wiggle=0)
+    // Compute wiggle offset for slight vertical movement
+    let wiggleOffset = 0;
     if (enemyObj.wiggleAmplitude > 0 && enemyObj.wiggleFrequency > 0) {
-      const elapsedTime = Date.now() - enemyObj.startTime; // Time since spawn
-      // wiggleProgress uses frequency and elapsed time to determine how far along in the sine wave we are
+      const elapsedTime = Date.now() - enemyObj.startTime;
       const wiggleProgress =
         (elapsedTime / 1000) * enemyObj.wiggleFrequency * Math.PI * 2;
-      wiggleOffset = Math.sin(wiggleProgress) * enemyObj.wiggleAmplitude; // Calculate wiggle based on sine wave
+      wiggleOffset = Math.sin(wiggleProgress) * enemyObj.wiggleAmplitude;
     }
 
-    // Apply movement and wiggle
-    // We now combine x (horizontal), y (vertical baseline) and wiggleOffset (vertical movement)
-    // We also maintain the scale that was set at spawn.
+    // Apply the transform to update the enemy's position and scale
     enemyObj.element.style.transform = `translate(${enemyObj.x}px, ${
       enemyObj.y + wiggleOffset
     }px) scale(${enemyObj.scale})`;
 
-    // Remove enemy if it goes off-screen
+    // Get the enemy's bounding rectangle after transformation
     const enemyRect = enemyObj.element.getBoundingClientRect();
-    if (enemyRect.right < 0) {
-      enemyObj.element.remove(); // Remove the enemy from DOM
-      activeEnemies.splice(i, 1); // Remove it from the activeEnemies array
+
+    // COUNTING: If the enemy's right edge has passed to the left of the player's left edge,
+    // and we haven't already counted it, increment the counter.
+    if (!enemyObj.counted && enemyRect.right < playerRect.left) {
+      enemiesPassed++;
+      enemyObj.counted = true; // Mark it as counted so it isn't counted again.
+      console.log("Enemies passed: " + enemiesPassed);
+    }
+
+    // REMOVAL: Remove the enemy if its right edge is far off the left side.
+    // Here, we remove it if enemyRect.right is less than -20% of gameAreaWidth.
+    // (You can adjust the multiplier as needed to represent "1.2 off from the screen width.")
+    if (enemyRect.right < -gameAreaWidth * 0.2) {
+      enemyObj.element.remove();
+      activeEnemies.splice(i, 1);
+      continue; // Proceed to the next enemy
     }
   }
 }
 
 function triggerDeath() {
-  // Set a gameOver flag or isDead flag in your global scope:
   isDead = true;
-
-  // Switch to death animation (assuming you have switchAnimation function):
   switchAnimation("death");
-  // Disable character movement (e.g., remove event listeners or check gameOver flag in controls)
-  // For example, if you have a global flag, your movement code can check `if (gameOver) return;`
+}
+
+//funkction to clear hitboxes after restart
+function clearDebugHitboxes() {
+  const weaponDebug = document.getElementById("weapon-hitbox-debug");
+  if (weaponDebug) {
+    weaponDebug.style.border = "none";
+    weaponDebug.style.width = "0px";
+    weaponDebug.style.height = "0px";
+  }
+
+  const enemyDebug = document.getElementById("enemy-hitbox-debug");
+  if (enemyDebug) {
+    enemyDebug.style.border = "none";
+    enemyDebug.style.width = "0px";
+    enemyDebug.style.height = "0px";
+  }
 }
 
 // Collision detection
+// Collision detection
 function checkCollisions() {
-  //player HITBOX
-  //---------------------------------------------------------------
+  const player = document.getElementById("player");
   const playerRect = player.getBoundingClientRect();
-  // Define separate shrink factors
-  const shrinkFactorWidth = 0.95; // reduce width by 95% (keep 5%)
-  const shrinkFactorHeight = 0.1; // reduce height by 10% (keep 90%)
 
-  const newWidth = playerRect.width * (1 - shrinkFactorWidth);
-  const newHeight = playerRect.height * (1 - shrinkFactorHeight);
+  // Determine current state: "idle", "run", or "jump"
+  const currentState = isJumping ? "jump" : isRunning ? "run" : "idle";
 
-  // Calculate how much to move each side inward
-  // For width: the total reduction is playerRect.width * shrinkFactorWidth
-  // Half of that for each side (left and right):
-  const horizontalInset = (playerRect.width - newWidth) / 2;
-
-  // For height: the total reduction is playerRect.height * shrinkFactorHeight
-  // Half of that for each side (top and bottom):
-  const verticalInset = (playerRect.height - newHeight) / 2;
-
-  const playerHitbox = {
-    left: playerRect.left + horizontalInset,
-    right: playerRect.right - horizontalInset,
-    top: playerRect.top + verticalInset,
-    bottom: playerRect.bottom - verticalInset,
+  // Get player hitbox configuration (red box)
+  const playerConfig =
+    playerHitboxConfigurations[currentState][currentWeapon || "unarmed"];
+  const playerHitboxWidth = playerRect.width * playerConfig.width;
+  const playerHitboxHeight = playerRect.height * playerConfig.height;
+  let playerHitbox = {
+    left:
+      playerRect.left +
+      (playerRect.width - playerHitboxWidth) / 2 +
+      playerConfig.offsetX * playerRect.width,
+    right:
+      playerRect.left +
+      (playerRect.width + playerHitboxWidth) / 2 +
+      playerConfig.offsetX * playerRect.width,
+    top:
+      playerRect.top +
+      (playerRect.height - playerHitboxHeight) / 2 +
+      playerConfig.offsetY * playerRect.height,
+    bottom:
+      playerRect.top +
+      (playerRect.height + playerHitboxHeight) / 2 +
+      playerConfig.offsetY * playerRect.height,
   };
-  //--------------------------------------------------------------------------------------
 
-  // Loop through all active enemies and calculate their hitboxes inside this loop
-  for (const enemyObj of activeEnemies) {
-    //Enemy HITBOX
-    //---------------------------------------------------------------------------------------
-    const enemyRect = enemyObj.element.getBoundingClientRect();
-    const enemyShrinkFactor = 0.5; // Reduce both width and height by 50%
+  // Compute weapon hitbox if a weapon is equipped and config exists (blue box)
+  let weaponHitbox = null;
+  if (
+    currentWeapon &&
+    weaponHitboxConfigurations[currentState] &&
+    weaponHitboxConfigurations[currentState][currentWeapon]
+  ) {
+    const weaponConfig =
+      weaponHitboxConfigurations[currentState][currentWeapon];
+    const weaponWidth = playerRect.width * weaponConfig.width;
+    const weaponHeight = playerRect.height * weaponConfig.height;
+    const weaponOffsetX = playerRect.width * weaponConfig.offsetX;
+    const weaponOffsetY = playerRect.height * weaponConfig.offsetY;
 
-    const enemyNewWidth = enemyRect.width * (1 - enemyShrinkFactor); // enemyRect.width * 0.5
-    const enemyNewHeight = enemyRect.height * (1 - enemyShrinkFactor); // enemyRect.height * 0.5
-
-    // Calculate how much to move each side inward to keep it centered
-    const enemyHorizontalInset = (enemyRect.width - enemyNewWidth) / 2;
-    const enemyVerticalInset = (enemyRect.height - enemyNewHeight) / 2;
-
-    const enemyHitbox = {
-      left: enemyRect.left + enemyHorizontalInset,
-      right: enemyRect.right - enemyHorizontalInset,
-      top: enemyRect.top + enemyVerticalInset,
-      bottom: enemyRect.bottom - enemyVerticalInset,
+    weaponHitbox = {
+      left: playerRect.left + weaponOffsetX,
+      right: playerRect.left + weaponOffsetX + weaponWidth,
+      top: playerRect.top + weaponOffsetY,
+      bottom: playerRect.top + weaponOffsetY + weaponHeight,
     };
-    //-----------------------------------------------------------------------------------------------
+  }
 
-    /*   const hitboxDebug = document.getElementById("hitbox-debug");
+  // Update red debug box for player hitbox
+  const hitboxDebug = document.getElementById("hitbox-debug");
+  if (hitboxDebug) {
     hitboxDebug.style.left = playerHitbox.left + "px";
     hitboxDebug.style.top = playerHitbox.top + "px";
     hitboxDebug.style.width = playerHitbox.right - playerHitbox.left + "px";
     hitboxDebug.style.height = playerHitbox.bottom - playerHitbox.top + "px";
-    */
+    hitboxDebug.style.border = "2px solid red";
+  }
 
-    // Perform collision check using adjusted hitboxes
-    if (
-      playerHitbox.left < enemyHitbox.right &&
-      playerHitbox.right > enemyHitbox.left &&
-      playerHitbox.top < enemyHitbox.bottom &&
-      playerHitbox.bottom > enemyHitbox.top
-    ) {
-      console.log("Collision detected!");
-      console.log("Collided with:", enemyObj.type); // Log the type of enemy collided
-      console.log("Exact enemy:", enemyObj.src); // Log the exact enemy source
-      triggerDeath();
-      break;
+  // Update blue debug box for weapon hitbox, if available
+  if (weaponHitbox) {
+    const weaponDebug = document.getElementById("weapon-hitbox-debug");
+    if (weaponDebug) {
+      weaponDebug.style.left = weaponHitbox.left + "px";
+      weaponDebug.style.top = weaponHitbox.top + "px";
+      weaponDebug.style.width = weaponHitbox.right - weaponHitbox.left + "px";
+      weaponDebug.style.height = weaponHitbox.bottom - weaponHitbox.top + "px";
+      weaponDebug.style.border = "2px solid blue";
     }
   }
+
+  // Check collisions with each enemy
+  for (const enemyObj of activeEnemies) {
+    // If this enemy has already been processed for collision, skip it.
+    if (enemyObj.collisionHandled) continue;
+
+    const enemyRect = enemyObj.element.getBoundingClientRect();
+    const enemyShrinkFactor = 0.5;
+    const enemyNewWidth = enemyRect.width * 0.2;
+    const enemyNewHeight = enemyRect.height * 0.4;
+    const enemyHitbox = {
+      left: enemyRect.left + (enemyRect.width - enemyNewWidth) / 2,
+      right: enemyRect.right - (enemyRect.width - enemyNewWidth) / 2,
+      top: enemyRect.top + (enemyRect.height - enemyNewHeight) / 2,
+      bottom: enemyRect.bottom - (enemyRect.height - enemyNewHeight) / 2,
+    };
+
+    // **Call the debug update function here for each enemy**
+    updateEnemyHitboxDebug(enemyObj, enemyHitbox);
+
+    const collidesPlayer = checkBoxCollision(playerHitbox, enemyHitbox);
+    const collidesWeapon = weaponHitbox
+      ? checkBoxCollision(weaponHitbox, enemyHitbox)
+      : false;
+
+    if (collidesPlayer || collidesWeapon) {
+      enemyObj.collisionHandled = true;
+      console.log("Collision detected!");
+      console.log("Enemy type:", enemyObj.type);
+      console.log("Enemy source:", enemyObj.src);
+
+      // Compute the centers of the player's and enemy's hitboxes:
+      const playerCenterX = (playerHitbox.left + playerHitbox.right) / 2;
+      const playerCenterY = (playerHitbox.top + playerHitbox.bottom) / 2;
+      const enemyCenterX = (enemyHitbox.left + enemyHitbox.right) / 2;
+      const enemyCenterY = (enemyHitbox.top + enemyHitbox.bottom) / 2;
+
+      // Compute the collision point as the midpoint between these centers.
+      const collisionPoint = {
+        x: (playerCenterX + enemyCenterX) / 2,
+        y: (playerCenterY + enemyCenterY) / 2,
+      };
+
+      // Call the overlay function with the collision point.
+      if (currentWeapon === "needle" && tornEnemies.includes(enemyObj.src)) {
+        let index = tornEnemies.indexOf(enemyObj.src);
+        if (index !== -1) {
+          enemyObj.element.src = repairedEnemies[index];
+        }
+        playCollisionOverlay("yarn", collisionPoint);
+        sewedCount++;
+        console.log("Enemies sewed: " + sewedCount);
+      } else if (
+        currentWeapon === "scissors" &&
+        longEnemies.includes(enemyObj.src)
+      ) {
+        let index = longEnemies.indexOf(enemyObj.src);
+        if (index !== -1) {
+          enemyObj.element.src = repairedEnemies[index];
+        }
+        playCollisionOverlay("steam", collisionPoint);
+        cutCount++;
+        console.log("Enemies cut: " + cutCount);
+      } else if (
+        currentWeapon === "iron" &&
+        crumEnemies.includes(enemyObj.src)
+      ) {
+        let index = crumEnemies.indexOf(enemyObj.src);
+        if (index !== -1) {
+          enemyObj.element.src = repairedEnemies[index];
+        }
+        playCollisionOverlay("short", collisionPoint);
+        ironedCount++;
+        console.log("Enemies ironed: " + ironedCount);
+      } else {
+        triggerDeath();
+        break;
+      }
+    }
+  }
+}
+
+// Helper function to check collision between two boxes
+function checkBoxCollision(box1, box2) {
+  return (
+    box1.left < box2.right &&
+    box1.right > box2.left &&
+    box1.top < box2.bottom &&
+    box1.bottom > box2.top
+  );
+}
+
+// Function to update the enemy hitbox debug element (green)
+function updateEnemyHitboxDebug(enemyObj, enemyHitbox) {
+  // Check if the enemy already has a debug element stored.
+  if (!enemyObj.debugDiv) {
+    // If not, create one.
+    enemyObj.debugDiv = document.createElement("div");
+    enemyObj.debugDiv.className = "enemy-hitbox-debug"; // optional class for styling
+    enemyObj.debugDiv.style.position = "absolute";
+    enemyObj.debugDiv.style.pointerEvents = "none";
+    enemyObj.debugDiv.style.border = "2px solid green";
+    // Append it to the game area.
+    const gameArea = document.getElementById("gameArea");
+    if (gameArea) {
+      gameArea.appendChild(enemyObj.debugDiv);
+    } else {
+      document.body.appendChild(enemyObj.debugDiv);
+    }
+  }
+  // Update the debug element's style using the computed enemyHitbox values.
+  enemyObj.debugDiv.style.left = enemyHitbox.left + "px";
+  enemyObj.debugDiv.style.top = enemyHitbox.top + "px";
+  enemyObj.debugDiv.style.width = enemyHitbox.right - enemyHitbox.left + "px";
+  enemyObj.debugDiv.style.height = enemyHitbox.bottom - enemyHitbox.top + "px";
+}
+
+// Helper function to check collision between two boxes
+function checkBoxCollision(box1, box2) {
+  return (
+    box1.left < box2.right &&
+    box1.right > box2.left &&
+    box1.top < box2.bottom &&
+    box1.bottom > box2.top
+  );
 }
 
 function pickRandomEnemy() {
@@ -610,30 +1089,202 @@ function pickRandomEnemy() {
   } else {
     chosenPool = longEnemies;
   }
-
-  // Pick a random element from the chosen pool
   const enemyIndex = Math.floor(Math.random() * chosenPool.length);
   return chosenPool[enemyIndex];
 }
-// Placeholder for particles and collision detection
+
+// ----------------------------
+// SPAWN WEAPON FUNCTION
+// ----------------------------
+function spawnWeapon() {
+  const now = Date.now();
+  if (now - lastWeaponSpawnTime < weaponSpawnInterval) return;
+  lastWeaponSpawnTime = now;
+
+  // Randomly choose a weapon type:
+  const types = ["needle", "scissors", "iron"];
+  const type = types[Math.floor(Math.random() * types.length)];
+
+  // Create the weapon pickup element:
+  const weapon = document.createElement("img");
+  weapon.src = `../public/${type}.svg`;
+  weapon.style.position = "absolute";
+
+  // Set weapon width relative to game area height (e.g., 5% of gameAreaHeight)
+  const weaponWidth = gameAreaHeight * 0.05;
+  weapon.style.width = weaponWidth + "px";
+  weapon.style.height = "auto";
+
+  // Spawn position: off-screen to the right and a random vertical position within game area margins.
+  const weaponX = gameAreaWidth * 1.1; // spawn off-screen right
+  const topMargin = gameAreaHeight * 0.2;
+  const bottomMargin = gameAreaHeight * 0.2;
+  const availableHeight = gameAreaHeight - topMargin - bottomMargin;
+  const weaponY = Math.floor(Math.random() * availableHeight) + topMargin;
+
+  // Set initial rotation to 0 and determine a rotation speed (in degrees per update)
+  let rotation = 0;
+  let rotationSpeed = Math.random() * (3 - 1) + 1; // between 1 and 3 degrees per update
+
+  // Apply initial transform (translation and rotation)
+  weapon.style.transform = `translate(${weaponX}px, ${weaponY}px) rotate(${rotation}deg)`;
+
+  // Append the weapon to the game area
+  document.getElementById("gameArea").appendChild(weapon);
+
+  // Push a weapon object into the activeWeapons array with its properties
+  activeWeapons.push({
+    element: weapon,
+    type: type,
+    x: weaponX,
+    y: weaponY,
+    rotation: rotation,
+    rotationSpeed: rotationSpeed,
+    // Horizontal speed relative to gameAreaHeight, adjust as needed:
+    speed: gameAreaHeight * 0.005,
+  });
+}
+
+// ----------------------------
+// MOVE WEAPONS FUNCTION
+// ----------------------------
+function moveWeapons() {
+  if (isDead) return;
+  // Loop through active weapon pickups:
+  for (let i = activeWeapons.length - 1; i >= 0; i--) {
+    let weaponObj = activeWeapons[i];
+    // Update horizontal position:
+    weaponObj.x -= weaponObj.speed;
+    // Update rotation:
+    weaponObj.rotation += weaponObj.rotationSpeed;
+    // Update the transform on the DOM element:
+    weaponObj.element.style.transform = `translate(${weaponObj.x}px, ${weaponObj.y}px) rotate(${weaponObj.rotation}deg)`;
+
+    // Remove the pickup if it moves far off the left side (e.g., 20% of gameAreaWidth off-screen)
+    if (
+      weaponObj.x + parseFloat(weaponObj.element.style.width) <
+      -gameAreaWidth * 0.2
+    ) {
+      weaponObj.element.remove();
+      activeWeapons.splice(i, 1);
+    }
+  }
+}
+
+// ----------------------------
+// CHECK WEAPON PICKUPS FUNCTION
+// ----------------------------
+function checkWeaponPickups() {
+  const player = document.getElementById("player");
+  const playerRect = player.getBoundingClientRect();
+
+  // Loop through each active weapon pickup:
+  for (let i = activeWeapons.length - 1; i >= 0; i--) {
+    let weaponObj = activeWeapons[i];
+    const weaponRect = weaponObj.element.getBoundingClientRect();
+
+    // Use a simple box collision check between player and weapon pickup
+    if (checkBoxCollision(playerRect, weaponRect)) {
+      // Compute collision point as the player's center
+      const collisionPoint = {
+        x: (playerRect.left + playerRect.right) / 2,
+        y: (playerRect.top + playerRect.bottom) / 2,
+      };
+
+      // Play the pickup overlay animation using "pickup" type.
+      playCollisionOverlay("pickup", collisionPoint);
+
+      // Increase ammo count for the type:
+      ammoCounts[weaponObj.type] = (ammoCounts[weaponObj.type] || 0) + 1;
+      console.log(
+        `Ammo - needle: ${ammoCounts["needle"]}, scissors: ${ammoCounts["scissors"]}, iron: ${ammoCounts["iron"]}`
+      );
+
+      // Remove the weapon pickup:
+      weaponObj.element.remove();
+      activeWeapons.splice(i, 1);
+    }
+  }
+}
+
+// ----------------------------
+// MODIFY PLAY COLLISION OVERLAY FUNCTION
+// ----------------------------
+function playCollisionOverlay(type, collisionPoint) {
+  const gameArea = document.getElementById("gameArea");
+  const gameAreaRect = gameArea.getBoundingClientRect();
+
+  // Create or get the overlay element dynamically:
+  let overlay = document.getElementById("collision-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "collision-overlay";
+    overlay.style.position = "absolute";
+    overlay.style.pointerEvents = "none";
+    // Append it to the game area
+    gameArea.appendChild(overlay);
+  }
+
+  // Compute the collision point relative to the game area:
+  const relX = collisionPoint.x - gameAreaRect.left;
+  const relY = collisionPoint.y - gameAreaRect.top;
+
+  // Set the overlay's position relative to the game area:
+  overlay.style.left = relX + "px";
+  overlay.style.top = relY + "px";
+
+  // Set the overlay's size relative to the game area (adjust as desired, here 10% of height)
+  overlay.style.width = gameAreaRect.width * 0.1 + "px";
+  overlay.style.height = gameAreaRect.height * 0.1 + "px";
+
+  // Clear any previous overlay content.
+  overlay.innerHTML = "";
+
+  // Determine the animation file path:
+  let animPath = "";
+  if (type === "pickup") {
+    animPath = "../public/pickup.json";
+  } else if (type === "yarn") {
+    animPath = "../public/yarn.json";
+  } else if (type === "steam") {
+    animPath = "../public/short.json";
+  } else if (type === "short") {
+    animPath = "../public/steam.json";
+  }
+
+  // Load the overlay animation using Lottie.
+  const overlayAnimation = lottie.loadAnimation({
+    container: overlay,
+    renderer: "svg",
+    loop: false,
+    autoplay: true,
+    path: animPath,
+  });
+
+  // When the overlay animation completes, clear its content.
+  overlayAnimation.addEventListener("complete", () => {
+    overlay.innerHTML = "";
+  });
+}
+
+// ----------------------------
+// HELPER: BOX COLLISION CHECK
+// ----------------------------
+function checkBoxCollision(box1, box2) {
+  return (
+    box1.left < box2.right &&
+    box1.right > box2.left &&
+    box1.top < box2.bottom &&
+    box1.bottom > box2.top
+  );
+}
+
+window.addEventListener("resize", () => {
+  initGameArea();
+});
+
+// Placeholder for particles and collision detection initialization
 function initParticlesAndCollisions() {
-  // ----------------------------------------
-  // Manage enemy spawning and movement
-  // ----------------------------------------
-
-  /**
-   * Function to generate a random interval between min and max (inclusive)
-   * @param {number} min - Minimum interval in milliseconds
-   * @param {number} max - Maximum interval in milliseconds
-   * @returns {number} - Random interval within the range
-   */
-
-  /**
-   * Function to pick a random enemy from the pools according to defined probabilities
-   * @returns {string} - Path to the randomly selected enemy image
-   */
-
-  // Start the continuous game loop
   requestAnimationFrame(gameLoop);
 }
 
@@ -662,8 +1313,6 @@ function hideLoadingAnimation() {
 
 // Main function startGame
 function startGame() {
-  /* console.log("startGame called"); */
-  // Placeholder for loading animation
   showLoadingAnimation();
 
   // Initialize game components
@@ -675,9 +1324,8 @@ function startGame() {
   initGameHUD();
   initScoreAndHighscores();
 
-  // Hide loading animation when initialization is complete
   hideLoadingAnimation();
 }
 
 // Call startGame to initialize everything
-/* startGame(); */
+// startGame();

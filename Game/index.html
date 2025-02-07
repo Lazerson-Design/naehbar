@@ -6,17 +6,26 @@
   </head>
   <body onload="startGame()">
     <div id="gameArea">
+      <!-- collision overlay -->
+      <!-- <div id="collision-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 90vh; pointer-events: none;"></div> -->
+
       <!-- Player Animation Container -->
 
       <div id="player"></div>
-      <!-- <div
+
+      <!-- HITBOX Divs for debugging -->
+      <div
         id="hitbox-debug"
-        style="
-          position: absolute;
-          border: 2px solid rgba(255, 0, 0, 0.368);
-          pointer-events: none;
-        "
-      ></div> -->
+        style="position: absolute; pointer-events: none"
+      ></div>
+      <div
+        id="weapon-hitbox-debug"
+        style="position: absolute; pointer-events: none"
+      ></div>
+      <div
+        id="enemy-hitbox-debug"
+        style="position: absolute; pointer-events: none"
+      ></div>
 
       <div id="floor"></div>
     </div>

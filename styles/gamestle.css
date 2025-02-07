@@ -1,12 +1,20 @@
+/* Reset default margins/padding */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scrollbar */
+}
+
 /* Game Area */
 #gameArea {
   position: relative;
-  width: 960px;
-  height: 540px;
+  width: 100%; /* Use 100% of the viewport width */
+  height: 90vh;
   border: 1px solid #d3d3d3;
   background-color: #d6ffff;
   overflow: hidden;
-  margin: 0 auto; /* Center on page */
+  /* Remove margin: 0 auto; to avoid centering that could add white space */
 }
 
 #decribtion {
@@ -19,8 +27,8 @@
 #player {
   /*  background-color: aqua; */
   position: absolute;
-  width: 100px; /* Set appropriate width for animation */
-  height: 100px; /* Set appropriate height for animation */
+  width: 15vh;
+  height: 15vh;
   top: 50%; /* Center vertically */
   left: 5%; /* Center horizontally */
   transform: translate(-50%, -50%); /* Offset for perfect centering */
