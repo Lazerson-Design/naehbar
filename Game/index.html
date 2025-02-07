@@ -14,7 +14,7 @@
       <div id="player"></div>
 
       <!-- HITBOX Divs for debugging -->
-      <!--   <div
+      <div
         id="hitbox-debug"
         style="position: absolute; pointer-events: none"
       ></div>
@@ -25,7 +25,7 @@
       <div
         id="enemy-hitbox-debug"
         style="position: absolute; pointer-events: none"
-      ></div> -->
+      ></div>
 
       <div id="floor"></div>
     </div>
@@ -38,15 +38,19 @@
       </p>
     </div>
 
-    <!-- Include this in your HTML head or just before the closing </body> tag -->
+    <!-- Mobile Controls Overlay Script -->
     <script>
-      // Simple mobile detection function
+      // Simple mobile detection function.
       function isMobileDevice() {
         return /Mobi|Android/i.test(navigator.userAgent);
       }
 
+      // Global variables for continuous movement intervals.
+      let moveLeftInterval;
+      let moveRightInterval;
+
+      // Create the mobile controls overlay.
       function createMobileControlsOverlay() {
-        // Create the overlay container if it doesn't already exist
         let overlay = document.getElementById("mobile-controls-overlay");
         if (!overlay) {
           overlay = document.createElement("div");
@@ -56,14 +60,14 @@
           overlay.style.left = "0";
           overlay.style.width = "100%";
           overlay.style.height = "100%";
-          overlay.style.zIndex = "1000"; // On top of game area
+          overlay.style.zIndex = "1000"; // Ensure it's on top.
           overlay.style.display = "flex";
           overlay.style.flexDirection = "row";
           overlay.style.justifyContent = "space-between";
           overlay.style.alignItems = "flex-end";
-          overlay.style.pointerEvents = "auto"; // Allow interaction
+          overlay.style.pointerEvents = "auto"; // Allow user interaction.
 
-          // Create left side controls (weapons and movement)
+          // Left-side controls (weapon buttons and movement).
           const leftDiv = document.createElement("div");
           leftDiv.id = "mobile-left-controls";
           leftDiv.style.margin = "10px";
@@ -71,13 +75,13 @@
           leftDiv.style.flexDirection = "column";
           leftDiv.style.gap = "10px";
 
-          // Create weapon buttons container
+          // Weapon buttons container.
           const weaponContainer = document.createElement("div");
           weaponContainer.id = "mobile-weapon-buttons";
           weaponContainer.style.display = "flex";
           weaponContainer.style.gap = "10px";
 
-          // Create weapon buttons for 1,2,3
+          // Create weapon buttons for "1", "2", "3".
           const btn1 = document.createElement("button");
           btn1.id = "btn-1";
           btn1.innerText = "1";
@@ -91,7 +95,7 @@
           weaponContainer.appendChild(btn2);
           weaponContainer.appendChild(btn3);
 
-          // Create movement buttons container (Left and Right)
+          // Movement buttons container.
           const moveContainer = document.createElement("div");
           moveContainer.id = "mobile-move-buttons";
           moveContainer.style.display = "flex";
@@ -105,11 +109,11 @@
           moveContainer.appendChild(btnLeft);
           moveContainer.appendChild(btnRight);
 
-          // Append weapon and move containers to leftDiv
+          // Append weapon and movement containers to leftDiv.
           leftDiv.appendChild(weaponContainer);
           leftDiv.appendChild(moveContainer);
 
-          // Create right side controls (Jump button)
+          // Right-side controls (Jump button).
           const rightDiv = document.createElement("div");
           rightDiv.id = "mobile-right-controls";
           rightDiv.style.margin = "10px";
@@ -118,7 +122,7 @@
           btnJump.innerText = "Jump";
           rightDiv.appendChild(btnJump);
 
-          // Create a close button at the top right corner
+          // Create a close button in the top right corner.
           const closeDiv = document.createElement("div");
           closeDiv.id = "mobile-close-controls";
           closeDiv.style.position = "fixed";
@@ -129,43 +133,66 @@
           btnClose.innerText = "X";
           closeDiv.appendChild(btnClose);
 
-          // Append left and right controls to the overlay
+          // Append the left and right controls and close button to the overlay.
           overlay.appendChild(leftDiv);
           overlay.appendChild(rightDiv);
-
-          // Append the close button to the overlay
           overlay.appendChild(closeDiv);
 
-          // Append overlay to document body (or gameArea if you prefer)
+          // Append the overlay to the body.
           document.body.appendChild(overlay);
         }
         return overlay;
       }
 
+      // Add event listeners when the DOM is ready.
       document.addEventListener("DOMContentLoaded", () => {
         if (isMobileDevice()) {
           const mobileOverlay = createMobileControlsOverlay();
           mobileOverlay.style.display = "flex";
 
-          // Add event listeners to simulate key controls:
-          document
-            .getElementById("btn-left")
-            .addEventListener("touchstart", (e) => {
-              e.preventDefault();
+          // Continuous movement for Left button.
+          const btnLeft = document.getElementById("btn-left");
+          btnLeft.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            moveLeftInterval = setInterval(() => {
               moveLeft();
-            });
-          document
-            .getElementById("btn-right")
-            .addEventListener("touchstart", (e) => {
-              e.preventDefault();
+            }, 20);
+          });
+          btnLeft.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            clearInterval(moveLeftInterval);
+          });
+          btnLeft.addEventListener("touchcancel", (e) => {
+            e.preventDefault();
+            clearInterval(moveLeftInterval);
+          });
+
+          // Continuous movement for Right button.
+          const btnRight = document.getElementById("btn-right");
+          btnRight.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            moveRightInterval = setInterval(() => {
               moveRight();
-            });
+            }, 20);
+          });
+          btnRight.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            clearInterval(moveRightInterval);
+          });
+          btnRight.addEventListener("touchcancel", (e) => {
+            e.preventDefault();
+            clearInterval(moveRightInterval);
+          });
+
+          // Jump button: trigger jump on touch.
           document
             .getElementById("btn-jump")
             .addEventListener("touchstart", (e) => {
               e.preventDefault();
               jump();
             });
+
+          // Weapon buttons.
           document
             .getElementById("btn-1")
             .addEventListener("touchstart", (e) => {
@@ -184,11 +211,12 @@
               e.preventDefault();
               switchWeapon("iron");
             });
+
+          // Close button: hide the overlay.
           document
             .getElementById("btn-close")
             .addEventListener("touchstart", (e) => {
               e.preventDefault();
-              // Hide the overlay when close is pressed.
               document.getElementById("mobile-controls-overlay").style.display =
                 "none";
             });
