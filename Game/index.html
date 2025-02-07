@@ -14,7 +14,7 @@
       <div id="player"></div>
 
       <!-- HITBOX Divs for debugging -->
-      <!--     <div
+      <div
         id="hitbox-debug"
         style="position: absolute; pointer-events: none"
       ></div>
@@ -25,7 +25,7 @@
       <div
         id="enemy-hitbox-debug"
         style="position: absolute; pointer-events: none"
-      ></div> -->
+      ></div>
 
       <div id="floor"></div>
     </div>
@@ -37,5 +37,163 @@
         Schere, 3: Bügeleisen
       </p>
     </div>
+
+    <!-- Include this in your HTML head or just before the closing </body> tag -->
+    <script>
+      // Simple mobile detection function
+      function isMobileDevice() {
+        return /Mobi|Android/i.test(navigator.userAgent);
+      }
+
+      function createMobileControlsOverlay() {
+        // Create the overlay container if it doesn't already exist
+        let overlay = document.getElementById("mobile-controls-overlay");
+        if (!overlay) {
+          overlay = document.createElement("div");
+          overlay.id = "mobile-controls-overlay";
+          overlay.style.position = "fixed";
+          overlay.style.top = "0";
+          overlay.style.left = "0";
+          overlay.style.width = "100%";
+          overlay.style.height = "100%";
+          overlay.style.zIndex = "1000"; // On top of game area
+          overlay.style.display = "flex";
+          overlay.style.flexDirection = "row";
+          overlay.style.justifyContent = "space-between";
+          overlay.style.alignItems = "flex-end";
+          overlay.style.pointerEvents = "auto"; // Allow interaction
+
+          // Create left side controls (weapons and movement)
+          const leftDiv = document.createElement("div");
+          leftDiv.id = "mobile-left-controls";
+          leftDiv.style.margin = "10px";
+          leftDiv.style.display = "flex";
+          leftDiv.style.flexDirection = "column";
+          leftDiv.style.gap = "10px";
+
+          // Create weapon buttons container
+          const weaponContainer = document.createElement("div");
+          weaponContainer.id = "mobile-weapon-buttons";
+          weaponContainer.style.display = "flex";
+          weaponContainer.style.gap = "10px";
+
+          // Create weapon buttons for 1,2,3
+          const btn1 = document.createElement("button");
+          btn1.id = "btn-1";
+          btn1.innerText = "1";
+          const btn2 = document.createElement("button");
+          btn2.id = "btn-2";
+          btn2.innerText = "2";
+          const btn3 = document.createElement("button");
+          btn3.id = "btn-3";
+          btn3.innerText = "3";
+          weaponContainer.appendChild(btn1);
+          weaponContainer.appendChild(btn2);
+          weaponContainer.appendChild(btn3);
+
+          // Create movement buttons container (Left and Right)
+          const moveContainer = document.createElement("div");
+          moveContainer.id = "mobile-move-buttons";
+          moveContainer.style.display = "flex";
+          moveContainer.style.gap = "10px";
+          const btnLeft = document.createElement("button");
+          btnLeft.id = "btn-left";
+          btnLeft.innerText = "Left";
+          const btnRight = document.createElement("button");
+          btnRight.id = "btn-right";
+          btnRight.innerText = "Right";
+          moveContainer.appendChild(btnLeft);
+          moveContainer.appendChild(btnRight);
+
+          // Append weapon and move containers to leftDiv
+          leftDiv.appendChild(weaponContainer);
+          leftDiv.appendChild(moveContainer);
+
+          // Create right side controls (Jump button)
+          const rightDiv = document.createElement("div");
+          rightDiv.id = "mobile-right-controls";
+          rightDiv.style.margin = "10px";
+          const btnJump = document.createElement("button");
+          btnJump.id = "btn-jump";
+          btnJump.innerText = "Jump";
+          rightDiv.appendChild(btnJump);
+
+          // Create a close button at the top right corner
+          const closeDiv = document.createElement("div");
+          closeDiv.id = "mobile-close-controls";
+          closeDiv.style.position = "fixed";
+          closeDiv.style.top = "10px";
+          closeDiv.style.right = "10px";
+          const btnClose = document.createElement("button");
+          btnClose.id = "btn-close";
+          btnClose.innerText = "X";
+          closeDiv.appendChild(btnClose);
+
+          // Append left and right controls to the overlay
+          overlay.appendChild(leftDiv);
+          overlay.appendChild(rightDiv);
+
+          // Append the close button to the overlay
+          overlay.appendChild(closeDiv);
+
+          // Append overlay to document body (or gameArea if you prefer)
+          document.body.appendChild(overlay);
+        }
+        return overlay;
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        if (isMobileDevice()) {
+          const mobileOverlay = createMobileControlsOverlay();
+          mobileOverlay.style.display = "flex";
+
+          // Add event listeners to simulate key controls:
+          document
+            .getElementById("btn-left")
+            .addEventListener("touchstart", (e) => {
+              e.preventDefault();
+              moveLeft();
+            });
+          document
+            .getElementById("btn-right")
+            .addEventListener("touchstart", (e) => {
+              e.preventDefault();
+              moveRight();
+            });
+          document
+            .getElementById("btn-jump")
+            .addEventListener("touchstart", (e) => {
+              e.preventDefault();
+              jump();
+            });
+          document
+            .getElementById("btn-1")
+            .addEventListener("touchstart", (e) => {
+              e.preventDefault();
+              switchWeapon("needle");
+            });
+          document
+            .getElementById("btn-2")
+            .addEventListener("touchstart", (e) => {
+              e.preventDefault();
+              switchWeapon("scissors");
+            });
+          document
+            .getElementById("btn-3")
+            .addEventListener("touchstart", (e) => {
+              e.preventDefault();
+              switchWeapon("iron");
+            });
+          document
+            .getElementById("btn-close")
+            .addEventListener("touchstart", (e) => {
+              e.preventDefault();
+              // Hide the overlay when close is pressed.
+              document.getElementById("mobile-controls-overlay").style.display =
+                "none";
+            });
+        }
+      });
+    </script>
   </body>
 </html>

@@ -1055,7 +1055,7 @@ function updateEnemyHitboxDebug(enemyObj, enemyHitbox) {
     enemyObj.debugDiv.className = "enemy-hitbox-debug"; // optional class for styling
     enemyObj.debugDiv.style.position = "absolute";
     enemyObj.debugDiv.style.pointerEvents = "none";
-    enemyObj.debugDiv.style.border = "0px solid green";
+    enemyObj.debugDiv.style.border = "2px solid green";
     // Append it to the game area.
     const gameArea = document.getElementById("gameArea");
     if (gameArea) {
