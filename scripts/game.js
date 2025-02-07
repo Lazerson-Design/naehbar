@@ -164,42 +164,44 @@ function getCollisionOverlay() {
   return overlay;
 }
 
+// ----------------------------
+// MODIFY PLAY COLLISION OVERLAY FUNCTION
+// ----------------------------
 function playCollisionOverlay(type, collisionPoint) {
-  // Get the game area container and its bounding rectangle.
   const gameArea = document.getElementById("gameArea");
   const gameAreaRect = gameArea.getBoundingClientRect();
 
-  // Get (or create) the overlay element.
+  // Create or get the overlay element dynamically:
   let overlay = document.getElementById("collision-overlay");
   if (!overlay) {
     overlay = document.createElement("div");
     overlay.id = "collision-overlay";
     overlay.style.position = "absolute";
     overlay.style.pointerEvents = "none";
-    // Append the overlay to the game area.
+    // Append it to the game area
     gameArea.appendChild(overlay);
   }
 
-  // Compute the collision point relative to the game area.
-  // collisionPoint is assumed to be an object with absolute coordinates {x, y}
+  // Compute the collision point relative to the game area:
   const relX = collisionPoint.x - gameAreaRect.left;
   const relY = collisionPoint.y - gameAreaRect.top;
 
-  // Set the overlay's position relative to the game area.
+  // Set the overlay's position relative to the game area:
   overlay.style.left = relX + "px";
   overlay.style.top = relY + "px";
 
-  // Adjust the overlay size relative to the game area.
-  // For example, if you want the overlay to be 10% of the game area height:
+  // Set the overlay's size relative to the game area (adjust as desired, here 10% of height)
   overlay.style.width = gameAreaRect.width * 0.1 + "px";
   overlay.style.height = gameAreaRect.height * 0.1 + "px";
 
-  // Clear any previous content.
+  // Clear any previous overlay content.
   overlay.innerHTML = "";
 
-  // Determine the animation file path based on the collision type.
+  // Determine the animation file path:
   let animPath = "";
-  if (type === "yarn") {
+  if (type === "pickup") {
+    animPath = "../public/pickup.json";
+  } else if (type === "yarn") {
     animPath = "../public/yarn.json";
   } else if (type === "steam") {
     animPath = "../public/short.json";
@@ -216,7 +218,7 @@ function playCollisionOverlay(type, collisionPoint) {
     path: animPath,
   });
 
-  // When the overlay animation completes, clear its content so it disappears.
+  // When the overlay animation completes, clear its content.
   overlayAnimation.addEventListener("complete", () => {
     overlay.innerHTML = "";
   });
@@ -1053,7 +1055,7 @@ function updateEnemyHitboxDebug(enemyObj, enemyHitbox) {
     enemyObj.debugDiv.className = "enemy-hitbox-debug"; // optional class for styling
     enemyObj.debugDiv.style.position = "absolute";
     enemyObj.debugDiv.style.pointerEvents = "none";
-    enemyObj.debugDiv.style.border = "2px solid green";
+    enemyObj.debugDiv.style.border = "0px solid green";
     // Append it to the game area.
     const gameArea = document.getElementById("gameArea");
     if (gameArea) {
@@ -1205,78 +1207,6 @@ function checkWeaponPickups() {
       activeWeapons.splice(i, 1);
     }
   }
-}
-
-// ----------------------------
-// MODIFY PLAY COLLISION OVERLAY FUNCTION
-// ----------------------------
-function playCollisionOverlay(type, collisionPoint) {
-  const gameArea = document.getElementById("gameArea");
-  const gameAreaRect = gameArea.getBoundingClientRect();
-
-  // Create or get the overlay element dynamically:
-  let overlay = document.getElementById("collision-overlay");
-  if (!overlay) {
-    overlay = document.createElement("div");
-    overlay.id = "collision-overlay";
-    overlay.style.position = "absolute";
-    overlay.style.pointerEvents = "none";
-    // Append it to the game area
-    gameArea.appendChild(overlay);
-  }
-
-  // Compute the collision point relative to the game area:
-  const relX = collisionPoint.x - gameAreaRect.left;
-  const relY = collisionPoint.y - gameAreaRect.top;
-
-  // Set the overlay's position relative to the game area:
-  overlay.style.left = relX + "px";
-  overlay.style.top = relY + "px";
-
-  // Set the overlay's size relative to the game area (adjust as desired, here 10% of height)
-  overlay.style.width = gameAreaRect.width * 0.1 + "px";
-  overlay.style.height = gameAreaRect.height * 0.1 + "px";
-
-  // Clear any previous overlay content.
-  overlay.innerHTML = "";
-
-  // Determine the animation file path:
-  let animPath = "";
-  if (type === "pickup") {
-    animPath = "../public/pickup.json";
-  } else if (type === "yarn") {
-    animPath = "../public/yarn.json";
-  } else if (type === "steam") {
-    animPath = "../public/short.json";
-  } else if (type === "short") {
-    animPath = "../public/steam.json";
-  }
-
-  // Load the overlay animation using Lottie.
-  const overlayAnimation = lottie.loadAnimation({
-    container: overlay,
-    renderer: "svg",
-    loop: false,
-    autoplay: true,
-    path: animPath,
-  });
-
-  // When the overlay animation completes, clear its content.
-  overlayAnimation.addEventListener("complete", () => {
-    overlay.innerHTML = "";
-  });
-}
-
-// ----------------------------
-// HELPER: BOX COLLISION CHECK
-// ----------------------------
-function checkBoxCollision(box1, box2) {
-  return (
-    box1.left < box2.right &&
-    box1.right > box2.left &&
-    box1.top < box2.bottom &&
-    box1.bottom > box2.top
-  );
 }
 
 window.addEventListener("resize", () => {
